@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using api.Interfaces;
 using api.Repository;
 using api.Models;
+using api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IFoodEntryRepository, FoodEntryRepository>();
+builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
 
 builder.Services.AddControllers();
 

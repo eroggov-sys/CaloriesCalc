@@ -9,5 +9,6 @@ namespace api.Models
     public class AppUser : IdentityUser
     {
         public List<FoodEntry> FoodEntries {get; set; } = [];
+        public UserProfile? Profile {get; set;}
     }
 }

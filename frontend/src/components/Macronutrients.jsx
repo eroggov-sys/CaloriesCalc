@@ -2,7 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle, } from "@/components/ui/card"
 
 export default function Macronoutrients({title, consumed, goal, currency}) {
 
-    const percent = Math.min(Math.round((consumed / goal) * 100), 100)
+    const percent =
+      goal > 0
+      ? Math.min(Math.round((consumed / goal) * 100), 100)
+      : 0
     const remaining = Math.max(goal - consumed, 0)
 
     const radius = 30
