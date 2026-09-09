@@ -57,10 +57,6 @@ function App() {
     }
   }, [authenticated])
 
-  function handleLogin() {
-    setAuthenticated(true)
-  }
-
   function handleLogout() {
     logout()
     setAuthenticated(false)

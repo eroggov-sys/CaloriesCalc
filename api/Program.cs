@@ -4,11 +4,35 @@ using api.Interfaces;
 using api.Repository;
 using api.Models;
 using api.Services;
+using api.ExternalProviders;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IFoodEntryRepository, FoodEntryRepository>();
 builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
+
+builder.Services.AddHttpClient<
+    IExternalFoodProvider,
+    OpenFoodFactsProvider>((services, client) =>
+        {
+            var configuration =
+                services.GetRequiredService<IConfiguration>();
+
+            var baseUrl = configuration[
+                "ExternalFoodApis:OpenFoodFacts:BaseUrl"]
+                ?? throw new InvalidOperationException(
+                    "Open Food Facts BaseUrl is missing");
+
+            var userAgent = configuration[
+                "ExternalFoodApis:OpenFoodFacts:UserAgent"]
+                ?? throw new InvalidOperationException(
+                    "Open Food Facts UserAgent is missing");
+
+            client.BaseAddress = new Uri(baseUrl);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
 
 builder.Services.AddControllers();
 
