@@ -13,7 +13,7 @@ namespace api.Models
     public decimal QuantityGrams { get; set; }
     public DateTime EatenAt { get; set; }
     public string MealType { get; set; } = string.Empty;
-    public string? UserId { get; set; }
-    public AppUser? User { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    public AppUser User { get; set; } = null!;
     }
 }

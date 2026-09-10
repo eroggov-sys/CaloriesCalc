@@ -23,6 +23,15 @@ namespace api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            
+            builder.Entity<FoodEntry>(entity =>
+            {
+                entity.HasOne(entry => entry.User)
+                    .WithMany(user => user.FoodEntries)
+                    .HasForeignKey(entry => entry.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             builder.Entity<UserProfile>(entity =>
             {
                 entity.HasKey(profile => profile.Id);
