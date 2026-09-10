@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace api.Dtos
 {
-    public class CreateEntryFoodDto
+    public class CreateFoodEntryDto
     {
     [Range(typeof(decimal), "0.01", "100000", ParseLimitsInInvariantCulture = true, ErrorMessage = "Quantity must be greater than zero")]
     public decimal QuantityGrams { get; set; }

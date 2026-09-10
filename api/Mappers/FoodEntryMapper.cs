@@ -28,7 +28,7 @@ namespace api.Mappers
             };
         }
 
-        public static FoodEntry ToFoodEntryFromCreate(this CreateEntryFoodDto entryFoodDto, int foodId, string userId)
+        public static FoodEntry ToFoodEntryFromCreate(this CreateFoodEntryDto entryFoodDto, int foodId, string userId)
         {
             return new FoodEntry
             {
@@ -40,7 +40,7 @@ namespace api.Mappers
             };
         }
 
-        public static FoodEntry ToFoodEntrytFromUpdate(this UpdateFoodEntryRequestDto foodEntrytDto)
+        public static FoodEntry ToFoodEntryFromUpdate(this updateDto foodEntrytDto)
         {
             return new FoodEntry
             {

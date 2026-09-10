@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 namespace api.Dtos
 {
-    public class UpdateFoodEntryRequestDto
+    public class updateDto
     {
         [Range(typeof(decimal), "0.01", "100000", ParseLimitsInInvariantCulture = true, ErrorMessage = "Quantity must be greater than zero")]
         public decimal QuantityGrams { get; set; }

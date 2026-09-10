@@ -24,7 +24,7 @@ namespace api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAll()
         {
             var entries = await _foodEntryRepo.GetAllAsync(CurrentUserId);
             var foodEntryDto = entries.Select(s => s.ToFoodEntryDto());
@@ -44,7 +44,7 @@ namespace api.Controllers
 
 
         [HttpPost("{foodId}")]
-        public async Task<IActionResult> Create([FromRoute] int foodId,[FromBody] CreateEntryFoodDto entryFoodDto)
+        public async Task<IActionResult> Create([FromRoute] int foodId,[FromBody] CreateFoodEntryDto entryFoodDto)
         {   
             var foodExists = await _foodEntryRepo.FoodExistsAsync(foodId);
 
@@ -62,9 +62,9 @@ namespace api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> UpdateAsync([FromRoute] int id, UpdateFoodEntryRequestDto updateDto)
+        public async Task<IActionResult> Update([FromRoute] int id, updateDto updateDto)
         {
-            var foodEntryModel = await _foodEntryRepo.UpdateAsync(id, updateDto.ToFoodEntrytFromUpdate(), CurrentUserId);
+            var foodEntryModel = await _foodEntryRepo.UpdateAsync(id, updateDto.ToFoodEntryFromUpdate(), CurrentUserId);
             if(foodEntryModel == null) return NotFound("Food entry not found");
 
             return Ok(foodEntryModel.ToFoodEntryDto());
@@ -75,9 +75,9 @@ namespace api.Controllers
         
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var commentModel = await _foodEntryRepo.DeleteAsync(id, CurrentUserId);
+            var deletedEntry = await _foodEntryRepo.DeleteAsync(id, CurrentUserId);
 
-            if (commentModel == null) return NotFound();
+            if (deletedEntry == null) return NotFound();
 
             return NoContent();
         }
@@ -107,7 +107,7 @@ namespace api.Controllers
         }
 
         [HttpGet("by-date")]
-        public async Task<IActionResult> GetByDategGroupedAsync([FromQuery] DateOnly? date)
+        public async Task<IActionResult> GetMealGroups([FromQuery] DateOnly? date)
         {
             if (date == null) return BadRequest("Date is required");
 
