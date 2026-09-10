@@ -40,11 +40,11 @@ namespace api.Mappers
             };
         }
 
-        public static FoodEntry ToFoodEntryFromUpdate(this updateDto foodEntrytDto)
+        public static FoodEntry ToFoodEntryFromUpdate(this UpdateFoodEntryDto updateDto)
         {
             return new FoodEntry
             {
-                QuantityGrams = foodEntrytDto.QuantityGrams,
+                QuantityGrams = updateDto.QuantityGrams,
                 
             };
         }

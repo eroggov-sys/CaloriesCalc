@@ -62,7 +62,7 @@ namespace api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> Update([FromRoute] int id, updateDto updateDto)
+        public async Task<IActionResult> Update([FromRoute] int id, UpdateFoodEntryDto updateDto)
         {
             var foodEntryModel = await _foodEntryRepo.UpdateAsync(id, updateDto.ToFoodEntryFromUpdate(), CurrentUserId);
             if(foodEntryModel == null) return NotFound("Food entry not found");
