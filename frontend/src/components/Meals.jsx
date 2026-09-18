@@ -148,22 +148,27 @@ export default function Meals({ date, refreshKey, onEntryCreated }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    let canceled = false
+    
     async function loadMeals() {
       try {
         setIsLoading(true)
         setError("")
 
         const data = await getMealGroups(date)
-        setMealGroups(data)
+        if (!canceled) setMealGroups(data)
 
       } catch (requestError) {
-        setError(requestError.message)
+        if (!canceled) setError(requestError.message)
+
       } finally{
-        setIsLoading(false)
+        if (!canceled) setIsLoading(false)
       } 
       
     }
     loadMeals()
+
+    return () => { canceled = true }
 
   }, [date, refreshKey])
 

@@ -7,7 +7,7 @@ namespace api.Dtos
 {
     public class UpdateFoodEntryDto
     {
-        [Range(typeof(decimal), "0.01", "100000", ParseLimitsInInvariantCulture = true, ErrorMessage = "Quantity must be greater than zero")]
+        [Range(typeof(decimal), "0.01", "5000", ParseLimitsInInvariantCulture = true, ErrorMessage = "Quantity must be between 0.01 and 5000 g")]
         public decimal QuantityGrams { get; set; }
 
     }

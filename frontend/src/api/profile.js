@@ -28,7 +28,14 @@ export async function updateProfile(profile) {
   )
 
   if (!response.ok) {
-    throw new Error("Failed to save profile")
+    const problem = await response.json().catch(() => null)
+
+    const message =
+      problem?.errors
+        ? Object.values(problem.errors).flat().join(" ")
+        : problem?.detail ?? problem?.title ?? "Failed to save profile"
+
+    throw new Error(message)
   }
 
   return response.json()

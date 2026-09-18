@@ -24,17 +24,21 @@ export default function DashBoard({ onLogout, onEditProfile }) {
   const [isTargetsLoading, setIsTargetsLoading] = useState(true)
 
   useEffect(() => {
+    let canceled = false
+
     async function loadNutrition () {
 
       try {
         const data = await getDailyNutrition(selectedDate)
-        setNutrition(data)
+        if (!canceled) setNutrition(data)
       } 
       catch (requestError) { 
-        setError(requestError.message)
+        if (!canceled) setError(requestError.message)
       }
     }
     loadNutrition()
+
+    return () => { canceled = true }
   },[selectedDate, refreshKey])
 
   useEffect(() => {

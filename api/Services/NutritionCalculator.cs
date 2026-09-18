@@ -12,9 +12,9 @@ namespace api.Services
     {
         public NutritionTargetDto Calculate(UserProfile profile, DateOnly calculationDate)
         {
-            var age = CalculateAge(profile.DateOfBirth, calculationDate);
+            var age = AgeCalculator.CalculateAge(profile.DateOfBirth, calculationDate);
 
-            if (age < 1) throw new ArgumentException("Date of birth in the past");
+            if (age < 1) throw new ArgumentException("Profile age must be at least 1 year");
             
             var leanBodyMass = CalculateLeanBodyMass(profile);
 
@@ -57,17 +57,6 @@ namespace api.Services
 
             };
 
-        }
-
-        private static int CalculateAge(DateOnly dateOfBirth, DateOnly calculationDate)
-        {
-            var age = calculationDate.Year - dateOfBirth.Year;
-
-            if (dateOfBirth > calculationDate.AddYears(-age))
-            {
-                age--;
-            }
-            return age;
         }
 
         private static decimal? CalculateLeanBodyMass(UserProfile profile)
