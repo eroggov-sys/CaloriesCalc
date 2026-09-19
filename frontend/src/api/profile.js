@@ -1,4 +1,5 @@
 import { authorizedFetch } from "@/api/auth"
+import { readErrorMessage } from "@/api/problem"
 
 const API_URL = "http://localhost:5077/api"
 
@@ -10,12 +11,13 @@ export async function getProfile() {
     }
 
     if (!response.ok) {
-        throw new Error("Failed to load profile")
+      throw new Error(await readErrorMessage(response, "Failed to load profile"))
     }
     return response.json()
 }
 
 export async function updateProfile(profile) {
+
   const response = await authorizedFetch(
     `${API_URL}/profile`,
     {
@@ -28,14 +30,7 @@ export async function updateProfile(profile) {
   )
 
   if (!response.ok) {
-    const problem = await response.json().catch(() => null)
-
-    const message =
-      problem?.errors
-        ? Object.values(problem.errors).flat().join(" ")
-        : problem?.detail ?? problem?.title ?? "Failed to save profile"
-
-    throw new Error(message)
+    throw new Error(await readErrorMessage(response, "Failed to save profile"))
   }
 
   return response.json()
@@ -51,7 +46,7 @@ export async function getNutritionTargets() {
   }
 
   if (!response.ok) {
-    throw new Error("Failed to load nutrition targets")
+    throw new Error(await readErrorMessage(response, "Failed to load nutrition targets"))
   }
 
   return response.json()

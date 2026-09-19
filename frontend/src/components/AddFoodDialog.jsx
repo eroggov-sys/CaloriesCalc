@@ -15,6 +15,7 @@ const AddFoodDialog = ({date, onCreated, }) => {
     const [foods, setFoods] = useState([])
     const [selectedFood, setSelectedFood] = useState(null)
     const [isSearching, setIsSearching] = useState(false)
+    const [hasSearched, setHasSearched] = useState(false)
     const [error, setError] = useState("")
     const [open, setOpen] = useState(false)
 
@@ -46,12 +47,16 @@ const AddFoodDialog = ({date, onCreated, }) => {
             try {
 
                 const result = await searchFoods(searchQuery)
-                if (!canceled) setFoods(result)
+                if (!canceled) {
+                    setFoods(result)
+                    setHasSearched(true)  
+                }
 
             } catch (requestError) {
                 if(!canceled) {
                     setError(requestError.message)
                     setFoods([])
+                    setHasSearched(false)
                 }
             } finally {
                 if(!canceled) setIsSearching(false)
@@ -70,6 +75,7 @@ const AddFoodDialog = ({date, onCreated, }) => {
         setSelectedFood(food)
         setQuery(food.name)
         setFoods([])
+        setHasSearched(false)
     }   
 
     async function handleSubmit(event) {
@@ -140,6 +146,7 @@ const AddFoodDialog = ({date, onCreated, }) => {
                         setSelectedFood(null)
                         setFoods([])
                         setError("")
+                        setHasSearched(false)
                     }}
                 />
                 <Input
@@ -174,6 +181,11 @@ const AddFoodDialog = ({date, onCreated, }) => {
 
 
                 {isSearching && (<p className="mt-2 text-sm text-zinc-500">Searching...</p>)}
+                {!isSearching && hasSearched && foods.length === 0 && (
+                    <p className="mt-2 text-sm text-zinc-500">
+                        Nothing found. Try another name.
+                    </p>
+                )}
 
                 {error && (
                     <p className="mt-2 text-sm text-red-600">
@@ -190,7 +202,14 @@ const AddFoodDialog = ({date, onCreated, }) => {
                         onClick={() => handleSelectFood(food)}
                         className="flex w-full items-center justify-between gap-4 px-3 py-2 text-left hover:bg-zinc-50"
                         >
-                        <span>{food.name}</span>
+                            
+                        <span className="flex min-w-0 flex-col">
+                            <span className="truncate">{food.name}</span>
+
+                            {food.brand && (
+                                <span className="truncate text-xs text-zinc-500">{food.brand}</span>
+                            )}
+                        </span>
 
                         <span className="whitespace-nowrap text-sm text-zinc-500">
                             {food.caloriesPer100g} kcal / 100 g

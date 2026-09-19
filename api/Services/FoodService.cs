@@ -22,19 +22,20 @@ namespace api.Services
             _logger = logger;
         }
 
-        public async Task<IReadOnlyList<FoodDto>> SearchAsync(
-        string query, CancellationToken cancellationToken = default)
+        public async Task<FoodSearchResult> SearchAsync(string query, CancellationToken cancellationToken = default)
         {
             var searchQuery = query.Trim();
 
             var localFoods = await SearchLocalAsync(searchQuery, cancellationToken);
 
-            if (localFoods.Count > 0) return localFoods;
+            if (localFoods.Count > 0)
+            {
+                return new FoodSearchResult(localFoods, ExternalSearchFailed: false);
+            }
 
-            var importedFoods = await ImportFromExternalAsync(searchQuery, cancellationToken);
-
-            return importedFoods;
+            return await ImportFromExternalAsync(searchQuery, cancellationToken);
         }
+
         private async Task<IReadOnlyList<FoodDto>> SearchLocalAsync(string query, CancellationToken cancellationToken = default)
         {
             var searchQuery = query.Trim();
@@ -51,7 +52,8 @@ namespace api.Services
                 .ToList();
         }
 
-        private async Task<IReadOnlyList<FoodDto>> ImportFromExternalAsync(string searchQuery, CancellationToken cancellationToken)
+        private async Task<FoodSearchResult> ImportFromExternalAsync(
+        string searchQuery, CancellationToken cancellationToken)
         {
             IReadOnlyList<ExternalFoodDto> externalFoods;
 
@@ -64,10 +66,13 @@ namespace api.Services
                 _logger.LogWarning(exception,
                     "External food search failed for query {Query}", searchQuery);
 
-                return [];
+                return new FoodSearchResult([], ExternalSearchFailed: true);
             }
 
-            if (externalFoods.Count == 0) return [];
+            if (externalFoods.Count == 0)
+            {
+                return new FoodSearchResult([], ExternalSearchFailed: false);
+            }
 
             var externalIds = externalFoods
                 .Select(food => food.ExternalIdentifier)
@@ -92,13 +97,14 @@ namespace api.Services
                 await _context.SaveChangesAsync(cancellationToken);
             }
 
-            return await SearchLocalAsync(searchQuery, cancellationToken);
+            var foods = await SearchLocalAsync(searchQuery, cancellationToken);
+
+            return new FoodSearchResult(foods, ExternalSearchFailed: false);
         }
 
 
-        public async Task<FoodDto?> GetByIdAsync(
-            int id,
-            CancellationToken cancellationToken = default)
+
+        public async Task<FoodDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var food = await _context.Foods
                 .AsNoTracking()
@@ -107,9 +113,7 @@ namespace api.Services
             return food?.ToFoodDto();
         }
 
-        public async Task<FoodDto?> CreateAsync(
-            CreateFoodDto dto,
-            CancellationToken cancellationToken = default)
+        public async Task<FoodDto?> CreateAsync( CreateFoodDto dto, CancellationToken cancellationToken = default)
         {
             var normalizedName = dto.Name.Trim();
 

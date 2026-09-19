@@ -8,10 +8,11 @@ namespace api.Mappers
     {
         public static Food ToFood(this ExternalFoodDto dto)
         {
+            
             return new Food
             {
                 Name = dto.Name.Trim(),
-                Brand = dto.Brand,
+                Brand = NormalizeBrand(dto.Brand),
                 Barcode = dto.Barcode,
                 Source = FoodSource.OpenFoodFacts,
                 ExternalId = dto.ExternalIdentifier,
@@ -21,6 +22,14 @@ namespace api.Mappers
                 CarbsPer100g = dto.CarbsPer100g ?? 0,
                 SugarPer100g = dto.SugarPer100g ?? 0,
             };
+        }
+        private static string? NormalizeBrand(string? brand)
+        {
+            if (string.IsNullOrWhiteSpace(brand)) return null;
+
+            var firstBrand = brand.Split(',')[0].Trim();
+
+            return firstBrand.Length == 0 ? null : firstBrand;
         }
     }
 }

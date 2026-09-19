@@ -83,4 +83,19 @@ public class ExternalFoodMapperTests
         Assert.Equal("999", food.ExternalId);
         Assert.Equal("3017620422003", food.Barcode);
     }
+
+    [Theory]
+    [InlineData("Nutella, Ferrero", "Nutella")]
+    [InlineData("  Ferrero  ", "Ferrero")]
+    [InlineData("", null)]
+    [InlineData(null, null)]
+    public void ToFood_NormalizesBrand(string? brand, string? expected)
+    {
+        var dto = CreateDto();
+        dto.Brand = brand;
+
+        var food = dto.ToFood();
+
+        Assert.Equal(expected, food.Brand);
+    }
 }

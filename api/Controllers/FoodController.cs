@@ -24,14 +24,18 @@ namespace api.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> Search(
-            [FromQuery]
-            [Required]
-            [MinLength(2)] 
-            string query,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> Search([FromQuery][Required][MinLength(2)] string query, CancellationToken cancellationToken)
         {
-            return Ok(await _foodService.SearchAsync(query, cancellationToken));
+            var result = await _foodService.SearchAsync(query, cancellationToken);
+
+            if (result.ExternalSearchFailed && result.Foods.Count == 0)
+            {
+                return Problem(
+                    detail: "Food database is temporarily unavailable, please try again later",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            return Ok(result.Foods);
         }
 
         [HttpPost]
