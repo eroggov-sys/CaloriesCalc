@@ -32,6 +32,23 @@ namespace api.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            builder.Entity<Food>(entity =>
+            {
+                entity.Property(food => food.Name).HasMaxLength(200);
+                entity.Property(food => food.Brand).HasMaxLength(200);
+                entity.Property(food => food.Barcode).HasMaxLength(50);
+                entity.Property(food => food.ExternalId).HasMaxLength(100);
+
+                entity.Property(food => food.Source).HasConversion<string>();
+
+                entity.HasIndex(food => new { food.Source, food.ExternalId })
+                    .IsUnique()
+                    .HasFilter("\"ExternalId\" IS NOT NULL");
+
+                entity.HasIndex(food => food.Barcode)
+                    .HasFilter("\"Barcode\" IS NOT NULL");
+            });
+
             builder.Entity<UserProfile>(entity =>
             {
                 entity.HasKey(profile => profile.Id);

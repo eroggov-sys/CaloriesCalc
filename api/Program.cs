@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IFoodEntryRepository, FoodEntryRepository>();
 builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
+builder.Services.AddScoped<IFoodService, FoodService>();
+
 
 builder.Services.AddHttpClient<
     IExternalFoodProvider,

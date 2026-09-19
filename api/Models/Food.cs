@@ -18,7 +18,15 @@ namespace api.Models
     public decimal FatPer100g { get; set; }
 
     public decimal CarbsPer100g { get; set; }
+
     public decimal SugarPer100g {get; set;}
 
+    public string? Brand { get; set; }
+
+    public string? Barcode { get; set; }
+
+    public FoodSource Source { get; set; } = FoodSource.Manual;
+    
+    public string? ExternalId { get; set; }
     }
 }
