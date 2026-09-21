@@ -26,6 +26,8 @@ namespace api.Data
             
             builder.Entity<FoodEntry>(entity =>
             {
+                entity.HasIndex(entry => new { entry.UserId, entry.Date });
+
                 entity.HasOne(entry => entry.User)
                     .WithMany(user => user.FoodEntries)
                     .HasForeignKey(entry => entry.UserId)

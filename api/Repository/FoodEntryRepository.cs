@@ -69,15 +69,12 @@ namespace api.Repository
 
         public async Task<List<FoodEntry>> GetByDateAsync(DateOnly date, string userId)
         {
-            var start = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            var end = start.AddDays(1);
 
             return await _context.FoodEntries
                           .Include(entry => entry.Food)
                           .Where(entry => 
                             entry.UserId == userId &&
-                            entry.EatenAt >= start && 
-                            entry.EatenAt < end)
+                            entry.Date == date)
                           .ToListAsync();
         }
 

@@ -16,7 +16,7 @@ namespace api.Mappers
                 Id = foodEntryModel.Id,
                 FoodId = foodEntryModel.FoodId,
                 QuantityGrams = foodEntryModel.QuantityGrams,
-                EatenAt = foodEntryModel.EatenAt,
+                Date = foodEntryModel.Date,
                 MealType = foodEntryModel.MealType,
                 FoodName = foodEntryModel.Food.Name,
                 Calories = foodEntryModel.Food.CaloriesPer100g * foodEntryModel.QuantityGrams / 100,
@@ -32,7 +32,7 @@ namespace api.Mappers
         {
             return new FoodEntry
             {
-                EatenAt = entryFoodDto.EatenAt!.Value,
+                Date = entryFoodDto.Date!.Value,
                 MealType = entryFoodDto.MealType,
                 QuantityGrams = entryFoodDto.QuantityGrams,
                 FoodId  = foodId,

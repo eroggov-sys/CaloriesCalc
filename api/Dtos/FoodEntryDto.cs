@@ -11,7 +11,7 @@ namespace api.Dtos
     public int Id { get; set; }
     public int FoodId { get; set; }
     public decimal QuantityGrams { get; set; }
-    public DateTime EatenAt { get; set; }
+    public DateOnly Date { get; set; }
     public string MealType { get; set; } = string.Empty;
     public string FoodName {get; set;} = string.Empty;
     public decimal Calories { get; set; }

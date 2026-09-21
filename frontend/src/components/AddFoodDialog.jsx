@@ -99,7 +99,7 @@ const AddFoodDialog = ({date, onCreated, }) => {
         try {
             await createFoodEntry(selectedFood.id, {
                 quantityGrams : quantity,
-                eatenAt : `${date}T12:00:00Z`,
+                date,
                 mealType,
             })
 

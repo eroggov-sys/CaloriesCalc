@@ -52,7 +52,7 @@ Content-Type: application/json
 
 {
   "quantityGrams": 150,
-  "eatenAt": "{{date}}T12:00:00Z",
+  "date": "{{date}}",
   "mealType": "Breakfast"
 }
 
