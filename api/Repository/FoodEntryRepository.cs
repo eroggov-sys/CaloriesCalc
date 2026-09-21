@@ -66,18 +66,6 @@ namespace api.Repository
         {
             return await _context.Foods.AnyAsync(food => food.Id == foodId);
         }
-
-        public async Task<List<FoodEntry>> GetByDateAsync(DateOnly date, string userId)
-        {
-
-            return await _context.FoodEntries
-                          .Include(entry => entry.Food)
-                          .Where(entry => 
-                            entry.UserId == userId &&
-                            entry.Date == date)
-                          .ToListAsync();
-        }
-
         
     }
 }

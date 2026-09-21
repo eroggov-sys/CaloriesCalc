@@ -12,10 +12,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IFoodEntryRepository, FoodEntryRepository>();
 builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
 builder.Services.AddScoped<IFoodService, FoodService>();
+builder.Services.AddScoped<IDiaryService, DiaryService>();
 
 
-builder.Services.AddHttpClient<
-    IExternalFoodProvider,
+builder.Services.AddHttpClient<IExternalFoodProvider,
     OpenFoodFactsProvider>((services, client) =>
         {
             var configuration =
@@ -36,8 +36,14 @@ builder.Services.AddHttpClient<
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddControllers(options =>
+    {
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
+    .AddJsonOptions(options =>
+    {
+        options.AllowInputFormatterExceptionMessages = false;
+    });builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

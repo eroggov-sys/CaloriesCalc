@@ -27,7 +27,7 @@ namespace api.Data
             builder.Entity<FoodEntry>(entity =>
             {
                 entity.HasIndex(entry => new { entry.UserId, entry.Date });
-
+                entity.Property(entry => entry.MealType).HasConversion<string>();
                 entity.HasOne(entry => entry.User)
                     .WithMany(user => user.FoodEntries)
                     .HasForeignKey(entry => entry.UserId)

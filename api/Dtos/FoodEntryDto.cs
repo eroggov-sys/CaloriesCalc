@@ -12,7 +12,7 @@ namespace api.Dtos
     public int FoodId { get; set; }
     public decimal QuantityGrams { get; set; }
     public DateOnly Date { get; set; }
-    public string MealType { get; set; } = string.Empty;
+    public MealType MealType { get; set; }
     public string FoodName {get; set;} = string.Empty;
     public decimal Calories { get; set; }
     public decimal Protein { get; set; }

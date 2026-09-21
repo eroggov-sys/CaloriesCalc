@@ -81,53 +81,6 @@ namespace api.Controllers
 
             return NoContent();
         }
-
-        [HttpGet("daily")]
-        public async Task<IActionResult> GetDaily([FromQuery] DateOnly? date)
-        {
-            if (date == null)  return BadRequest("Date is required");
-
-            var entries = await _foodEntryRepo.GetByDateAsync(date.Value, CurrentUserId);
-            
-            var entryDtos = entries
-                             .Select(entry => entry.ToFoodEntryDto())
-                             .ToList();
-
-            var result = new DailyNutritionDto
-            {
-                Date = date.Value,
-                Calories = entryDtos.Sum(entry => entry.Calories),
-                Protein = entryDtos.Sum(entry => entry.Protein),
-                Fat = entryDtos.Sum(entry => entry.Fat),
-                Carbs = entryDtos.Sum(entry => entry.Carbs),
-                Sugar = entryDtos.Sum(entry => entry.Sugar)
-            };
-
-            return Ok(result);
-        }
-
-        [HttpGet("by-date")]
-        public async Task<IActionResult> GetMealGroups([FromQuery] DateOnly? date)
-        {
-            if (date == null) return BadRequest("Date is required");
-
-            var entries = await _foodEntryRepo.GetByDateAsync(date.Value, CurrentUserId);
-            var entryDtos = entries
-                             .Select(entry => entry.ToFoodEntryDto())
-                             .ToList();
-            var groups = entryDtos
-                          .GroupBy(entry => entry.MealType)
-                          .Select(group => new MealGroupDto
-                          {
-                                MealType = group.Key,
-                                TotalCalories = group.Sum(entry => entry.Calories),
-                                Entries = group.ToList(),
-                          }).ToList();
-
-            return Ok(groups);
-        }
-    
-    
     
     }
 

@@ -14,7 +14,5 @@ namespace api.Interfaces
         Task<FoodEntry?> DeleteAsync(int id, string userId);
         Task<FoodEntry?> UpdateAsync(int id, FoodEntry foodEntry, string userId);
         Task<bool> FoodExistsAsync(int foodId);
-        Task<List<FoodEntry>> GetByDateAsync(DateOnly date, string userId);
-
     }
 }

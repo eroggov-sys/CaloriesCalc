@@ -37,12 +37,8 @@ Authorization: Bearer {{token}}
 GET {{api}}/api/Food/search?query=milk
 Authorization: Bearer {{token}}
 
-### day result
-GET {{api}}/api/FoodEntries/daily?date={{date}}
-Authorization: Bearer {{token}}
-
-### Daily records of meals
-GET {{api}}/api/FoodEntries/by-date?date={{date}}
+### diary for a day
+GET {{api}}/api/diary?date={{date}}
 Authorization: Bearer {{token}}
 
 ### Add an entry (1 — product ID from the search)

@@ -17,8 +17,9 @@ namespace api.Dtos
 
 
     [Required(ErrorMessage = "MealType is required")]
-    [RegularExpression("^(Breakfast|Lunch|Dinner|Snacks)$", ErrorMessage = "Invalid meal type")]
-    public string MealType { get; set; } = string.Empty;
+    [EnumDataType(typeof(MealType), ErrorMessage = "Invalid meal type")]
+    public MealType? MealType { get; set; }
+
 
     }
 }
