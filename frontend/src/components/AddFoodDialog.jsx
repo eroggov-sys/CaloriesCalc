@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { searchFoods } from "@/api/foods"
 import { Input } from "./ui/input"
 import { Plus } from "lucide-react"
@@ -32,6 +32,13 @@ const AddFoodDialog = ({date, onCreated, }) => {
     ]
 
     const [isSearchingExternal, setIsSearchingExternal] = useState(false)
+
+
+    const [page, setPage] = useState(1)
+    const [hasMore, setHasMore] = useState(false)
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
+    const latestQueryRef = useRef("")
+
     
     
     useEffect(() => {
@@ -51,8 +58,10 @@ const AddFoodDialog = ({date, onCreated, }) => {
 
                 const result = await searchFoods(searchQuery)
                 if (!canceled) {
-                    setFoods(result)
-                    setHasSearched(true)  
+                    setFoods(result.items)
+                    setHasMore(result.hasMore)
+                    setPage(1)
+                    setHasSearched(true)
                 }
 
             } catch (requestError) {
@@ -79,6 +88,7 @@ const AddFoodDialog = ({date, onCreated, }) => {
         setQuery(food.name)
         setFoods([])
         setHasSearched(false)
+        setHasMore(false)    
     }   
 
     async function handleSubmit(event) {
@@ -128,12 +138,39 @@ const AddFoodDialog = ({date, onCreated, }) => {
 
         try {
             const result = await searchFoods(searchQuery, { external: true })
-            setFoods(result)
+            setFoods(result.items)
+            setHasMore(result.hasMore)
+            setPage(1)
             setHasSearched(true)
+
         } catch (requestError) {
             setError(requestError.message)
         } finally {
             setIsSearchingExternal(false)
+        }
+    }
+
+    async function handleLoadMore() {
+        const searchQuery = query.trim()
+        const nextPage = page + 1
+
+        setIsLoadingMore(true)
+
+        try {
+            const result = await searchFoods(searchQuery, { page: nextPage })
+
+            if (latestQueryRef.current !== searchQuery) return
+
+            setFoods((previous) => {
+                const knownIds = new Set(previous.map((food) => food.id))
+                return [...previous, ...result.items.filter((food) => !knownIds.has(food.id))]
+            })
+            setHasMore(result.hasMore)
+            setPage(nextPage)
+        } catch (requestError) {
+            setError(requestError.message)
+        } finally {
+            setIsLoadingMore(false)
         }
     }
 
@@ -174,11 +211,13 @@ const AddFoodDialog = ({date, onCreated, }) => {
                     value={query}
                     placeholder="Enter product's name"
                     onChange = {(event) => {
+                        latestQueryRef.current = event.target.value.trim()   
                         setQuery(event.target.value)
                         setSelectedFood(null)
                         setFoods([])
                         setError("")
                         setHasSearched(false)
+                        setHasMore(false) 
                     }}
                 />
                 <Input
@@ -216,6 +255,16 @@ const AddFoodDialog = ({date, onCreated, }) => {
                 {!isSearching && hasSearched && foods.length === 0 && (
                     <div className="mt-2">
                         <p className="text-sm text-zinc-500">Nothing found locally.</p>
+                        {hasMore && (
+                            <button
+                                type="button"
+                                onClick={handleLoadMore}
+                                disabled={isLoadingMore}
+                                className="w-full px-3 py-2 text-center text-sm text-zinc-600 hover:bg-zinc-50 disabled:opacity-50"
+                            >
+                                {isLoadingMore ? "Loading..." : "Show more"}
+                            </button>
+                        )}
                         {searchExternalButton}
                     </div>
                 )}

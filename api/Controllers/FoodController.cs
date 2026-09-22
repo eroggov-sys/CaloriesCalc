@@ -25,11 +25,14 @@ namespace api.Controllers
 
         [HttpGet("search")]
         public async Task<IActionResult> Search(
-            [FromQuery][Required][MinLength(2)] string query, 
-            [FromQuery] bool external = false, 
+            [FromQuery][Required][MinLength(2, ErrorMessage = "Search query must be at least 2 characters")] string query,
+            [FromQuery] bool external = false,
+            [FromQuery][Range(1, 1000)] int page = 1,
+            [FromQuery][Range(1, 50)] int pageSize = 20,
             CancellationToken cancellationToken = default)
+
         {
-            var result = await _foodService.SearchAsync(query, external, cancellationToken);
+            var result = await _foodService.SearchAsync(query, page, pageSize, external,cancellationToken);  
 
             if (result.ExternalSearchFailed && result.Foods.Count == 0)
             {
@@ -38,7 +41,13 @@ namespace api.Controllers
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
 
-            return Ok(result.Foods);
+            return Ok(new PagedResponseDto<FoodDto>
+            {
+                Items = result.Foods,
+                Page = page,
+                PageSize = pageSize,
+                HasMore = result.HasMore,
+            });
         }
 
         [HttpPost]

@@ -6,6 +6,6 @@ using api.Dtos;
 
 namespace api.Interfaces
 {
-        public sealed record FoodSearchResult(IReadOnlyList<FoodDto> Foods,bool ExternalSearchFailed);
+        public sealed record FoodSearchResult(IReadOnlyList<FoodDto> Foods, bool HasMore, bool ExternalSearchFailed);
 
 }

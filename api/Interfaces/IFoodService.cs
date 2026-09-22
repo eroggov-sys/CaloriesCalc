@@ -4,7 +4,7 @@ namespace api.Interfaces
 {
     public interface IFoodService
     {
-        Task<FoodSearchResult> SearchAsync(string query, bool includeExternal, CancellationToken cancellationToken = default);
+        Task<FoodSearchResult> SearchAsync(string query, int page, int pageSize, bool includeExternal, CancellationToken cancellationToken = default);
 
         Task<FoodDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
