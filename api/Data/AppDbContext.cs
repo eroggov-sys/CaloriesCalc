@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using api.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 
 namespace api.Data
@@ -23,6 +19,9 @@ namespace api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.HasPostgresExtension("pg_trgm");
+
             
             builder.Entity<FoodEntry>(entity =>
             {
@@ -49,6 +48,11 @@ namespace api.Data
 
                 entity.HasIndex(food => food.Barcode)
                     .HasFilter("\"Barcode\" IS NOT NULL");
+                    
+                entity.HasIndex(food => food.Name)
+                    .HasMethod("gin")
+                    .HasOperators("gin_trgm_ops");
+
             });
 
             builder.Entity<UserProfile>(entity =>

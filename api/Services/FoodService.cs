@@ -15,8 +15,6 @@ namespace api.Services
         private readonly IExternalFoodProvider _externalFoodProvider;
         private readonly ILogger<FoodService> _logger;
 
-        int MinLocalResultsBeforeExternal = 5;
-
         public FoodService(AppDbContext context, IExternalFoodProvider externalFoodProvider, ILogger<FoodService> logger)
         {
             _context = context;
@@ -57,13 +55,16 @@ namespace api.Services
                 .AsNoTracking()
                 .Where(food => food.Barcode == searchQuery ||
                     EF.Functions.ILike(food.Name, contains) ||
-                    (food.Brand != null && EF.Functions.ILike(food.Brand, contains)))
+                    (food.Brand != null && EF.Functions.ILike(food.Brand, contains)) ||
+                    EF.Functions.TrigramsAreWordSimilar(searchQuery, food.Name))
                 .OrderBy(food =>
                     food.Barcode == searchQuery ? 0 :
                     EF.Functions.ILike(food.Name, escaped) ? 1 :
                     EF.Functions.ILike(food.Name, startsWith) ? 2 :
                     EF.Functions.ILike(food.Name, contains) ? 3 :
-                    4)
+                    food.Brand != null && EF.Functions.ILike(food.Brand, contains) ? 4 :
+                    5)
+                .ThenByDescending(food => EF.Functions.TrigramsWordSimilarity(searchQuery, food.Name)) 
                 .ThenBy(food => food.Name.Length)
                 .ThenBy(food => food.Name)
                 .ThenBy(food => food.Id) 
