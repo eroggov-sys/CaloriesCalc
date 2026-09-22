@@ -1,8 +1,8 @@
 import { authorizedFetch } from "@/api/auth"
 import { readErrorMessage } from "@/api/problem"
+import { API_URL } from "@/api/config"
 
 
-const API_URL = "http://localhost:5077/api"
 
 export async function getDiaryDay(date) {
 
@@ -17,7 +17,7 @@ export async function getDiaryDay(date) {
   return response.json()
 }
 
-export async function createFoodEntry(foodId, entry) {
+export async function createFoodEntry( entry) {
 
   const response = await authorizedFetch( `${API_URL}/FoodEntries`,
     {

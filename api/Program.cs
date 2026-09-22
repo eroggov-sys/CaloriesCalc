@@ -12,6 +12,8 @@ builder.Services.AddScoped<IFoodEntryService, FoodEntryService>();
 builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
 builder.Services.AddScoped<IFoodService, FoodService>();
 builder.Services.AddScoped<IDiaryService, DiaryService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+
 
 
 builder.Services.AddHttpClient<IExternalFoodProvider,
@@ -42,7 +44,9 @@ builder.Services.AddControllers(options =>
     .AddJsonOptions(options =>
     {
         options.AllowInputFormatterExceptionMessages = false;
-    });builder.Services.AddOpenApi();
+    });
+
+builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

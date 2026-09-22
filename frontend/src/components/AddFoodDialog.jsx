@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { searchFoods } from "@/api/foods"
+import { useEffect, useState, useRef } from "react"
+import { searchFoods,  importFood, findFoodByBarcode } from "@/api/foods"
 import { Input } from "./ui/input"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -30,6 +30,21 @@ const AddFoodDialog = ({date, onCreated, }) => {
         { label: "Dinner", value: "Dinner" },
         { label: "Snacks", value: "Snacks" }
     ]
+
+    const [isSearchingExternal, setIsSearchingExternal] = useState(false)
+
+
+    const [page, setPage] = useState(1)
+    const [hasMore, setHasMore] = useState(false)
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
+    const latestQueryRef = useRef("")
+
+    const [isImporting, setIsImporting] = useState(false)
+
+    const [barcode, setBarcode] = useState("")
+    const [isLookingUpBarcode, setIsLookingUpBarcode] = useState(false)
+
+    
     
     useEffect(() => {
         const searchQuery = query.trim();
@@ -48,8 +63,10 @@ const AddFoodDialog = ({date, onCreated, }) => {
 
                 const result = await searchFoods(searchQuery)
                 if (!canceled) {
-                    setFoods(result)
-                    setHasSearched(true)  
+                    setFoods(result.items)
+                    setHasMore(result.hasMore)
+                    setPage(1)
+                    setHasSearched(true)
                 }
 
             } catch (requestError) {
@@ -71,12 +88,30 @@ const AddFoodDialog = ({date, onCreated, }) => {
     },[query, selectedFood])
 
 
-    const handleSelectFood = (food) =>{
-        setSelectedFood(food)
-        setQuery(food.name)
+    async function handleSelectFood(food) {
         setFoods([])
         setHasSearched(false)
-    }   
+        setHasMore(false)
+        setQuery(food.name)
+
+        if (food.id) {
+            setSelectedFood(food)
+            return
+        }
+
+        setIsImporting(true)
+        setError("")
+
+        try {
+            const importedFood = await importFood(food.source, food.externalId)
+            setSelectedFood(importedFood)
+        } catch (requestError) {
+            setError(requestError.message)
+            setSelectedFood(null)
+        } finally {
+            setIsImporting(false)
+        }
+    }
 
     async function handleSubmit(event) {
         event.preventDefault()
@@ -117,6 +152,92 @@ const AddFoodDialog = ({date, onCreated, }) => {
         }
     }
 
+    async function handleSearchExternal() {
+        const searchQuery = query.trim()
+
+        setIsSearchingExternal(true)
+        setError("")
+
+        try {
+            const result = await searchFoods(searchQuery, { external: true })
+            setFoods(result.items)
+            setHasMore(result.hasMore)
+            setPage(1)
+            setHasSearched(true)
+
+        } catch (requestError) {
+            setError(requestError.message)
+        } finally {
+            setIsSearchingExternal(false)
+        }
+    }
+
+    async function handleBarcodeLookup() {
+        const code = barcode.trim()
+
+        if (!/^\d{8,14}$/.test(code)) {
+            setError("Barcode must contain 8 to 14 digits")
+            return
+        }
+
+        setIsLookingUpBarcode(true)
+        setError("")
+
+        try {
+            const food = await findFoodByBarcode(code)
+
+            if (food === null) {
+                setError("Product with this barcode was not found")
+                return
+            }
+
+            setSelectedFood(food)
+            setQuery(food.name)
+            setFoods([])
+            setHasSearched(false)
+        } catch (requestError) {
+            setError(requestError.message)
+        } finally {
+            setIsLookingUpBarcode(false)
+        }
+    }
+
+
+    async function handleLoadMore() {
+        const searchQuery = query.trim()
+        const nextPage = page + 1
+
+        setIsLoadingMore(true)
+
+        try {
+            const result = await searchFoods(searchQuery, { page: nextPage })
+
+            if (latestQueryRef.current !== searchQuery) return
+
+            setFoods((previous) => {
+                const knownIds = new Set(previous.map((food) => food.id))
+                return [...previous, ...result.items.filter((food) => !knownIds.has(food.id))]
+            })
+            setHasMore(result.hasMore)
+            setPage(nextPage)
+        } catch (requestError) {
+            setError(requestError.message)
+        } finally {
+            setIsLoadingMore(false)
+        }
+    }
+
+    const searchExternalButton = (
+        <button
+            type="button"
+            onClick={handleSearchExternal}
+            disabled={isSearchingExternal}
+            className="w-full px-3 py-2 text-left text-sm text-green-700 hover:bg-zinc-50 disabled:opacity-50"
+        >
+            {isSearchingExternal ? "Searching Open Food Facts..." : "Search Open Food Facts"}
+        </button>
+    )
+
     return(
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger
@@ -143,13 +264,34 @@ const AddFoodDialog = ({date, onCreated, }) => {
                     value={query}
                     placeholder="Enter product's name"
                     onChange = {(event) => {
+                        latestQueryRef.current = event.target.value.trim()   
                         setQuery(event.target.value)
                         setSelectedFood(null)
                         setFoods([])
                         setError("")
                         setHasSearched(false)
+                        setHasMore(false) 
                     }}
                 />
+                
+                <div className="mt-2 flex gap-2">
+                    <Input
+                        value={barcode}
+                        inputMode="numeric"
+                        placeholder="Barcode"
+                        onChange={(event) => setBarcode(event.target.value)}
+                    />
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleBarcodeLookup}
+                        disabled={isLookingUpBarcode}
+                    >
+                        {isLookingUpBarcode ? "..." : "Find"}
+                    </Button>
+                </div>
+
                 <Input
                     type="number"
                     min="0"
@@ -183,9 +325,20 @@ const AddFoodDialog = ({date, onCreated, }) => {
 
                 {isSearching && (<p className="mt-2 text-sm text-zinc-500">Searching...</p>)}
                 {!isSearching && hasSearched && foods.length === 0 && (
-                    <p className="mt-2 text-sm text-zinc-500">
-                        Nothing found. Try another name.
-                    </p>
+                    <div className="mt-2">
+                        <p className="text-sm text-zinc-500">Nothing found locally.</p>
+                        {hasMore && (
+                            <button
+                                type="button"
+                                onClick={handleLoadMore}
+                                disabled={isLoadingMore}
+                                className="w-full px-3 py-2 text-center text-sm text-zinc-600 hover:bg-zinc-50 disabled:opacity-50"
+                            >
+                                {isLoadingMore ? "Loading..." : "Show more"}
+                            </button>
+                        )}
+                        {searchExternalButton}
+                    </div>
                 )}
 
                 {error && (
@@ -217,13 +370,14 @@ const AddFoodDialog = ({date, onCreated, }) => {
                         </span>
                         </button>
                     ))}
+                    {searchExternalButton}
                     </div>
                 )}
 
             </div>
             <Button 
                 type="submit"
-                disabled={isSaving || !selectedFood}
+                disabled={isSaving || !selectedFood || isImporting}
             >
                 {isSaving ? "Saving..." : "Add"}
             </Button>

@@ -34,7 +34,7 @@ namespace api.Services
 
                     return new MealGroupDto
                     {
-                        MealType = mealType.ToString(),
+                        MealType = mealType,
                         Totals = mealEntries.ToTotalsDto(),
                         Entries = mealEntries.Select(entry => entry.ToFoodEntryDto()).ToList(),
                     };

@@ -14,5 +14,7 @@ namespace api.Dtos
         public decimal FatPer100g { get; set; }
         public decimal CarbsPer100g { get; set; }
         public decimal SugarPer100g { get; set; }
+        public string? ExternalId { get; set; }
+
     }
 }

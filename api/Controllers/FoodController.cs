@@ -24,9 +24,15 @@ namespace api.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery][Required][MinLength(2)] string query, CancellationToken cancellationToken)
+        public async Task<IActionResult> Search(
+            [FromQuery][Required][MinLength(2, ErrorMessage = "Search query must be at least 2 characters")] string query,
+            [FromQuery] bool external = false,
+            [FromQuery][Range(1, 1000)] int page = 1,
+            [FromQuery][Range(1, 50)] int pageSize = 20,
+            CancellationToken cancellationToken = default)
+
         {
-            var result = await _foodService.SearchAsync(query, cancellationToken);
+            var result = await _foodService.SearchAsync(query, page, pageSize, external,cancellationToken);  
 
             if (result.ExternalSearchFailed && result.Foods.Count == 0)
             {
@@ -35,7 +41,13 @@ namespace api.Controllers
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
 
-            return Ok(result.Foods);
+            return Ok(new PagedResponseDto<FoodDto>
+            {
+                Items = result.Foods,
+                Page = page,
+                PageSize = pageSize,
+                HasMore = result.HasMore,
+            });
         }
 
         [HttpPost]
@@ -53,5 +65,43 @@ namespace api.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = food.Id }, food);
         }
+
+        [HttpPost("import")]
+        public async Task<IActionResult> Import([FromBody] ImportFoodDto dto, CancellationToken cancellationToken)
+        {
+            var result = await _foodService.ImportAsync(dto, cancellationToken);
+
+            if (result.ExternalSearchFailed)
+            {
+                return Problem(
+                    detail: "Food database is temporarily unavailable, please try again later",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+            
+            if (result.Food == null) return NotFound();
+
+            return Ok(result.Food);
+        }
+
+        [HttpGet("barcode/{barcode}")]
+        public async Task<IActionResult> GetByBarcode(
+            [RegularExpression(@"^\d{8,14}$", ErrorMessage = "Barcode must contain 8 to 14 digits")] string barcode,
+            CancellationToken cancellationToken)
+        {
+            var result = await _foodService.FindByBarcodeAsync(barcode, cancellationToken);
+
+            if (result.ExternalSearchFailed)
+            {
+                return Problem(
+                    detail: "Food database is temporarily unavailable, please try again later",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            if (result.Food == null) return NotFound();
+
+            return Ok(result.Food);
+        }
+
+
     }
 }

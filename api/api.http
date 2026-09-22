@@ -57,3 +57,7 @@ Content-Type: application/json
 
 ### OpenAPI-doc
 GET {{api}}/openapi/v1.json
+
+### Search, page 2
+GET {{api}}/api/Food/search?query=nutella&page=2&pageSize=4
+Authorization: Bearer {{token}}
