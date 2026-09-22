@@ -31,3 +31,17 @@ export async function importFood(source, externalId) {
 
     return response.json()
 }
+
+export async function findFoodByBarcode(barcode) {
+    const response = await authorizedFetch(
+        `${API_URL}/Food/barcode/${encodeURIComponent(barcode)}`,
+    )
+
+    if (response.status === 404) return null
+
+    if (!response.ok) {
+        throw new Error(await readErrorMessage(response, "Failed to look up barcode"))
+    }
+
+    return response.json()
+}

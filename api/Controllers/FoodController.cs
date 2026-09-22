@@ -83,5 +83,25 @@ namespace api.Controllers
             return Ok(result.Food);
         }
 
+        [HttpGet("barcode/{barcode}")]
+        public async Task<IActionResult> GetByBarcode(
+            [RegularExpression(@"^\d{8,14}$", ErrorMessage = "Barcode must contain 8 to 14 digits")] string barcode,
+            CancellationToken cancellationToken)
+        {
+            var result = await _foodService.FindByBarcodeAsync(barcode, cancellationToken);
+
+            if (result.ExternalSearchFailed)
+            {
+                return Problem(
+                    detail: "Food database is temporarily unavailable, please try again later",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            if (result.Food == null) return NotFound();
+
+            return Ok(result.Food);
+        }
+
+
     }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react"
-import { searchFoods } from "@/api/foods"
+import { searchFoods,  importFood, findFoodByBarcode } from "@/api/foods"
 import { Input } from "./ui/input"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -40,6 +40,9 @@ const AddFoodDialog = ({date, onCreated, }) => {
     const latestQueryRef = useRef("")
 
     const [isImporting, setIsImporting] = useState(false)
+
+    const [barcode, setBarcode] = useState("")
+    const [isLookingUpBarcode, setIsLookingUpBarcode] = useState(false)
 
     
     
@@ -169,6 +172,37 @@ const AddFoodDialog = ({date, onCreated, }) => {
         }
     }
 
+    async function handleBarcodeLookup() {
+        const code = barcode.trim()
+
+        if (!/^\d{8,14}$/.test(code)) {
+            setError("Barcode must contain 8 to 14 digits")
+            return
+        }
+
+        setIsLookingUpBarcode(true)
+        setError("")
+
+        try {
+            const food = await findFoodByBarcode(code)
+
+            if (food === null) {
+                setError("Product with this barcode was not found")
+                return
+            }
+
+            setSelectedFood(food)
+            setQuery(food.name)
+            setFoods([])
+            setHasSearched(false)
+        } catch (requestError) {
+            setError(requestError.message)
+        } finally {
+            setIsLookingUpBarcode(false)
+        }
+    }
+
+
     async function handleLoadMore() {
         const searchQuery = query.trim()
         const nextPage = page + 1
@@ -239,6 +273,25 @@ const AddFoodDialog = ({date, onCreated, }) => {
                         setHasMore(false) 
                     }}
                 />
+                
+                <div className="mt-2 flex gap-2">
+                    <Input
+                        value={barcode}
+                        inputMode="numeric"
+                        placeholder="Barcode"
+                        onChange={(event) => setBarcode(event.target.value)}
+                    />
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleBarcodeLookup}
+                        disabled={isLookingUpBarcode}
+                    >
+                        {isLookingUpBarcode ? "..." : "Find"}
+                    </Button>
+                </div>
+
                 <Input
                     type="number"
                     min="0"

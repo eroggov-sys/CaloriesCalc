@@ -204,5 +204,22 @@ namespace api.Services
 
                 
         }
+
+        public async Task<FoodLookupResult> FindByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
+        {
+            var localFood = await _context.Foods
+                .AsNoTracking()
+                .FirstOrDefaultAsync(food => food.Barcode == barcode, cancellationToken);
+
+            if (localFood != null) return new FoodLookupResult(localFood.ToFoodDto(), ExternalSearchFailed: false);
+
+            return await ImportAsync(
+                new ImportFoodDto
+                {
+                    Source = FoodSource.OpenFoodFacts,
+                ExternalId = barcode,
+                },
+            cancellationToken);
+        }
     }
 }
