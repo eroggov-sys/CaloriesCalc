@@ -10,6 +10,8 @@ namespace api.Services
     public class FoodService : IFoodService
     {
         private const int SearchResultLimit = 20;
+        private const int MinLocalResultsBeforeExternal = 5;
+
 
         private readonly AppDbContext _context;
         private readonly IExternalFoodProvider _externalFoodProvider;
@@ -21,6 +23,14 @@ namespace api.Services
             _externalFoodProvider = externalFoodProvider;
             _logger = logger;
         }
+        
+        private static string EscapeLikePattern(string value)
+        {
+            return value
+                .Replace("\\", "\\\\")
+                .Replace("%", "\\%")
+                .Replace("_", "\\_");
+        }
 
         public async Task<FoodSearchResult> SearchAsync(string query, CancellationToken cancellationToken = default)
         {
@@ -28,33 +38,50 @@ namespace api.Services
 
             var localFoods = await SearchLocalAsync(searchQuery, cancellationToken);
 
-            if (localFoods.Count > 0)
+            if (localFoods.Count >= MinLocalResultsBeforeExternal)
             {
                 return new FoodSearchResult(localFoods, ExternalSearchFailed: false);
             }
 
-            return await ImportFromExternalAsync(searchQuery, cancellationToken);
+            return await ImportFromExternalAsync(searchQuery, localFoods, cancellationToken);
         }
 
-        private async Task<IReadOnlyList<FoodDto>> SearchLocalAsync(string query, CancellationToken cancellationToken = default)
+        private async Task<IReadOnlyList<FoodDto>> SearchLocalAsync(string searchQuery, CancellationToken cancellationToken = default)
         {
-            var searchQuery = query.Trim();
+            var escaped = EscapeLikePattern(searchQuery);
+            var contains = $"%{escaped}%";
+            var startsWith = $"{escaped}%";
 
             var foods = await _context.Foods
                 .AsNoTracking()
-                .Where(food => EF.Functions.ILike(food.Name, $"%{searchQuery}%"))
-                .OrderBy(food => food.Name)
+                .Where(food => food.Barcode == searchQuery ||
+                    EF.Functions.ILike(food.Name, contains) ||
+                    (food.Brand != null && EF.Functions.ILike(food.Brand, contains)))
+                .OrderBy(food =>
+                    food.Barcode == searchQuery ? 0 :
+                    EF.Functions.ILike(food.Name, escaped) ? 1 :
+                    EF.Functions.ILike(food.Name, startsWith) ? 2 :
+                    EF.Functions.ILike(food.Name, contains) ? 3 :
+                    4)
+                .ThenBy(food => food.Name.Length)
+                .ThenBy(food => food.Name)
                 .Take(SearchResultLimit)
                 .ToListAsync(cancellationToken);
 
-            return foods
-                .Select(food => food.ToFoodDto())
-                .ToList();
+                return foods
+                    .Select(food => food.ToFoodDto())
+                    .ToList();
         }
 
-        private async Task<FoodSearchResult> ImportFromExternalAsync(
-        string searchQuery, CancellationToken cancellationToken)
+        private async Task<FoodSearchResult> ImportFromExternalAsync(string searchQuery, IReadOnlyList<FoodDto> localFoods, CancellationToken cancellationToken)
         {
+            
+            if (searchQuery.Count(char.IsLetterOrDigit) < 2)
+            {
+                return new FoodSearchResult(localFoods, ExternalSearchFailed: false);
+            }
+
+
             IReadOnlyList<ExternalFoodDto> externalFoods;
 
             try
@@ -66,12 +93,12 @@ namespace api.Services
                 _logger.LogWarning(exception,
                     "External food search failed for query {Query}", searchQuery);
 
-                return new FoodSearchResult([], ExternalSearchFailed: true);
+                return new FoodSearchResult(localFoods, ExternalSearchFailed: true);
             }
 
             if (externalFoods.Count == 0)
             {
-                return new FoodSearchResult([], ExternalSearchFailed: false);
+                return new FoodSearchResult(localFoods, ExternalSearchFailed: false);
             }
 
             var externalIds = externalFoods
@@ -119,9 +146,7 @@ namespace api.Services
 
             var foodExists = await _context.Foods
                 .AsNoTracking()
-                .AnyAsync(
-                    food => EF.Functions.ILike(food.Name, normalizedName),
-                    cancellationToken);
+                .AnyAsync(food => EF.Functions.ILike(food.Name, EscapeLikePattern(normalizedName)), cancellationToken);
 
             if (foodExists) return null;
 
