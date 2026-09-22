@@ -42,7 +42,9 @@ builder.Services.AddControllers(options =>
     .AddJsonOptions(options =>
     {
         options.AllowInputFormatterExceptionMessages = false;
-    });builder.Services.AddOpenApi();
+    });
+
+builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

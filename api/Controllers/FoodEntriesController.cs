@@ -1,12 +1,8 @@
 using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using api.Mappers;
 using api.Dtos;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using api.Models;
 
 namespace api.Controllers
 {

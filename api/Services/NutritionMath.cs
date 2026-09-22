@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace api.Services
 {
-    public class NutritionMath
+    public static class NutritionMath
     {
         public static decimal ForQuantity(decimal per100g, decimal grams) => 
             per100g * grams / 100m;

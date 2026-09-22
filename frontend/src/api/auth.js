@@ -1,3 +1,5 @@
+import { readErrorMessage } from "@/api/problem"
+
 const API_URL = "http://localhost:5077"
 
 export async function register(email, password) {   
@@ -8,7 +10,7 @@ export async function register(email, password) {
         body: JSON.stringify({email, password}),
     })
 
-    if (!response.ok) throw new Error("Failed to register")
+    if (!response.ok) throw new Error(await readErrorMessage(response, "Failed to register"))
 }
 
 export async function login(email, password) {
@@ -18,7 +20,7 @@ export async function login(email, password) {
         body: JSON.stringify({email, password}),
     })
 
-    if (!response.ok) throw new Error("Invalid email or password")
+    if (!response.ok) throw new Error(await readErrorMessage(response, "Invalid email or password"))
     
     const data = await response.json();
 

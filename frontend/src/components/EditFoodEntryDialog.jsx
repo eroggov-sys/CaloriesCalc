@@ -18,34 +18,32 @@ const EditFoodEntryDialog = ({ entry, open, onOpenChange, onUpdated }) =>{
     const [error, setError] = useState("")
     const [isSaving, setIsSaving] = useState(false)
 
-        async function handleSubmit(event) {
-            event.preventDefault()
+    async function handleSubmit(event) {
+      event.preventDefault()
     
-            const quantity = Number(quantityGrams)
+      const quantity = Number(quantityGrams)
     
-            if (!Number.isFinite(quantity) || quantity <= 0) {
-                setError("Enter correct quantity")
-                return
-            }
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        setError("Enter correct quantity")
+        return
+      }
     
-            try {
-                setIsSaving(true)
-                setError("")
+      try {
+        setIsSaving(true)
+        setError("")
 
-                await updateFoodEntry(entry.id, quantity)
+        await updateFoodEntry(entry.id, quantity)
 
-                onOpenChange(false)
-                onUpdated?.()
+        onOpenChange(false)
+        onUpdated?.()
                 
-            } catch (requestError) {
-                setError(requestError.message)
-            } finally {
-                setIsSaving(false)
-            }
-        }
+      } catch (requestError) {
+          setError(requestError.message)
+      } finally {
+          setIsSaving(false)
+      }
+    }
         
-    if(!entry) return null
-
     return(
         <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

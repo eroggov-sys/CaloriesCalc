@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
+
 using System.Security.Claims;
-using System.Threading.Tasks;
 using api.Data;
 using api.Dtos;
 using api.Mappers;
 using api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using api.Interfaces;
 
 namespace api.Controllers
@@ -73,7 +67,7 @@ namespace api.Controllers
             .AsNoTracking()
             .FirstOrDefaultAsync(profile => profile.UserId == CurrentUserId);
         
-        if (profile == null) return NotFound("User profile has not been created");
+        if (profile == null) return NotFound();
 
         var calculationDate = DateOnly.FromDateTime(DateTime.UtcNow);
 

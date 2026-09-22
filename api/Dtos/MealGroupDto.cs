@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
+using api.Models;
 
 namespace api.Dtos
 {
     public class MealGroupDto
     {
-        public string MealType {get;set;} = string.Empty;
+        public MealType MealType {get;set;}
         public NutritionTotalsDto Totals { get; set; } = new();
-        public List<FoodEntryDto> Entries { get; set; } = null!;
+        public List<FoodEntryDto> Entries { get; set; } = [];
     }
 }
