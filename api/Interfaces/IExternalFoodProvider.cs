@@ -9,5 +9,8 @@ namespace api.Interfaces
     public interface IExternalFoodProvider
     {
         Task<IReadOnlyList<ExternalFoodDto>> SearchAsync(string query, CancellationToken cancellationToken = default);
+        Task<ExternalFoodDto?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
+
+    
     }
 }

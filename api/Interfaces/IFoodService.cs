@@ -9,6 +9,8 @@ namespace api.Interfaces
         Task<FoodDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
         Task<FoodDto?> CreateAsync(CreateFoodDto dto, CancellationToken cancellationToken = default);
+        Task<FoodLookupResult> ImportAsync(ImportFoodDto dto, CancellationToken cancellationToken = default);
+
         
     }
 }

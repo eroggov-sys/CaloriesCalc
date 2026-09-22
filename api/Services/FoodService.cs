@@ -42,7 +42,7 @@ namespace api.Services
                 return new FoodSearchResult(localFoods, hasMore, ExternalSearchFailed: false);
             }
 
-            return await ImportFromExternalAsync(searchQuery, localFoods, pageSize, cancellationToken);
+            return await SearchExternalAsync(searchQuery, localFoods, cancellationToken);
         }
 
         private async Task<(IReadOnlyList<FoodDto> Foods, bool HasMore)> SearchLocalAsync(string searchQuery, int skip, int take, CancellationToken cancellationToken = default)
@@ -50,13 +50,15 @@ namespace api.Services
             var escaped = EscapeLikePattern(searchQuery);
             var contains = $"%{escaped}%";
             var startsWith = $"{escaped}%";
+            var useFuzzySearch = searchQuery.Length >= 4;
+
 
             var foods = await _context.Foods
                 .AsNoTracking()
                 .Where(food => food.Barcode == searchQuery ||
                     EF.Functions.ILike(food.Name, contains) ||
                     (food.Brand != null && EF.Functions.ILike(food.Brand, contains)) ||
-                    EF.Functions.TrigramsAreWordSimilar(searchQuery, food.Name))
+                    (useFuzzySearch && EF.Functions.TrigramsAreWordSimilar(searchQuery, food.Name)))
                 .OrderBy(food =>
                     food.Barcode == searchQuery ? 0 :
                     EF.Functions.ILike(food.Name, escaped) ? 1 :
@@ -83,14 +85,12 @@ namespace api.Services
                 return (page, hasMore);
         }
 
-        private async Task<FoodSearchResult> ImportFromExternalAsync(string searchQuery, IReadOnlyList<FoodDto> localFoods, int pageSize, CancellationToken cancellationToken)
+        private async Task<FoodSearchResult> SearchExternalAsync(string searchQuery, IReadOnlyList<FoodDto> localFoods, CancellationToken cancellationToken)
         {
-            
             if (searchQuery.Count(char.IsLetterOrDigit) < 2)
             {
                 return new FoodSearchResult(localFoods, HasMore: false, ExternalSearchFailed: false);
             }
-
 
             IReadOnlyList<ExternalFoodDto> externalFoods;
 
@@ -123,21 +123,17 @@ namespace api.Services
                 .Select(food => food.ExternalId!)
                 .ToListAsync(cancellationToken);
 
-            var newFoods = externalFoods
+            var candidates = externalFoods
                 .Where(food => !knownIds.Contains(food.ExternalIdentifier))
-                .Select(food => food.ToFood())
+                .Select(food => food.ToCandidateDto())
                 .ToList();
 
-            if (newFoods.Count > 0)
-            {
-                _context.Foods.AddRange(newFoods);
-                await _context.SaveChangesAsync(cancellationToken);
-            }
-
-            var (foods, hasMore) = await SearchLocalAsync(searchQuery, 0, pageSize, cancellationToken);
-
-            return new FoodSearchResult(foods, hasMore, ExternalSearchFailed: false);
+            return new FoodSearchResult(
+                [.. localFoods, .. candidates],
+                HasMore: false,
+                ExternalSearchFailed: false);
         }
+
 
 
 
@@ -168,6 +164,45 @@ namespace api.Services
             return foodModel.ToFoodDto();
         }
 
-       
+        public async Task<FoodLookupResult> ImportAsync(ImportFoodDto dto, CancellationToken cancellationToken = default)
+        {
+            var existingFood = await _context.Foods
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    food => food.Source == dto.Source && food.ExternalId == dto.ExternalId,
+                    cancellationToken);
+
+            if (existingFood is not null)
+            {
+                return new FoodLookupResult(existingFood.ToFoodDto(), ExternalSearchFailed: false);
+            }
+
+            ExternalFoodDto? externalFood;
+
+            try
+            {
+                externalFood = await _externalFoodProvider.GetByBarcodeAsync(dto.ExternalId, cancellationToken);
+            }
+            catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogWarning(exception, "Food import failed for {ExternalId}", dto.ExternalId);
+
+                return new FoodLookupResult(null, ExternalSearchFailed: true);
+            }
+
+            if (externalFood is null)
+            {
+                return new FoodLookupResult(null, ExternalSearchFailed: false);
+            }
+
+            var food = externalFood.ToFood();
+
+            _context.Foods.Add(food);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return new FoodLookupResult(food.ToFoodDto(), ExternalSearchFailed: false);
+
+                
+        }
     }
 }

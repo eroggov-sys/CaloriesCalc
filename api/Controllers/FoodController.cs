@@ -65,5 +65,23 @@ namespace api.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = food.Id }, food);
         }
+
+        [HttpPost("import")]
+        public async Task<IActionResult> Import([FromBody] ImportFoodDto dto, CancellationToken cancellationToken)
+        {
+            var result = await _foodService.ImportAsync(dto, cancellationToken);
+
+            if (result.ExternalSearchFailed)
+            {
+                return Problem(
+                    detail: "Food database is temporarily unavailable, please try again later",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+            
+            if (result.Food == null) return NotFound();
+
+            return Ok(result.Food);
+        }
+
     }
 }

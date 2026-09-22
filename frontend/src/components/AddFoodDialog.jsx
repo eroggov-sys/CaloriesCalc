@@ -39,6 +39,8 @@ const AddFoodDialog = ({date, onCreated, }) => {
     const [isLoadingMore, setIsLoadingMore] = useState(false)
     const latestQueryRef = useRef("")
 
+    const [isImporting, setIsImporting] = useState(false)
+
     
     
     useEffect(() => {
@@ -83,13 +85,30 @@ const AddFoodDialog = ({date, onCreated, }) => {
     },[query, selectedFood])
 
 
-    const handleSelectFood = (food) =>{
-        setSelectedFood(food)
-        setQuery(food.name)
+    async function handleSelectFood(food) {
         setFoods([])
         setHasSearched(false)
-        setHasMore(false)    
-    }   
+        setHasMore(false)
+        setQuery(food.name)
+
+        if (food.id) {
+            setSelectedFood(food)
+            return
+        }
+
+        setIsImporting(true)
+        setError("")
+
+        try {
+            const importedFood = await importFood(food.source, food.externalId)
+            setSelectedFood(importedFood)
+        } catch (requestError) {
+            setError(requestError.message)
+            setSelectedFood(null)
+        } finally {
+            setIsImporting(false)
+        }
+    }
 
     async function handleSubmit(event) {
         event.preventDefault()
@@ -305,7 +324,7 @@ const AddFoodDialog = ({date, onCreated, }) => {
             </div>
             <Button 
                 type="submit"
-                disabled={isSaving || !selectedFood}
+                disabled={isSaving || !selectedFood || isImporting}
             >
                 {isSaving ? "Saving..." : "Add"}
             </Button>

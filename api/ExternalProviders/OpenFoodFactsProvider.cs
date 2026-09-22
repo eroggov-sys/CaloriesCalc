@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
 using api.Dtos;
 using api.Dtos.OpenFoodFacts;
 using api.Interfaces;
@@ -17,6 +14,25 @@ namespace api.ExternalProviders
         public OpenFoodFactsProvider(HttpClient httpClient) 
         {
             _httpClient = httpClient;
+        }
+
+        public async Task<ExternalFoodDto?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
+        {
+            var requestUri = $"api/v2/product/{barcode}.json" +
+                "?fields=code,product_name,brands,nutriments";
+
+            using var response = await _httpClient.GetAsync(requestUri, cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.NotFound) return null;
+
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content
+                .ReadFromJsonAsync<OpenFoodFactsProductResponse>(cancellationToken);
+
+            if (result is null || result.Status != 1 || result.Product is null) return null;
+
+            return result.Product.ToExternalFoodDto();
         }
 
         public async Task<IReadOnlyList<ExternalFoodDto>> SearchAsync(string query, CancellationToken cancellationToken = default)

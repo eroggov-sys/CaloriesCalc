@@ -17,3 +17,17 @@ export async function searchFoods(query, { page = 1, external = false } = {}) {
 
     return response.json()
 }
+
+export async function importFood(source, externalId) {
+    const response = await authorizedFetch(`${API_URL}/Food/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source, externalId }),
+    })
+
+    if (!response.ok) {
+        throw new Error(await readErrorMessage(response, "Failed to import food"))
+    }
+
+    return response.json()
+}
