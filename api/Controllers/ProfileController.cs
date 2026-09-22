@@ -45,10 +45,6 @@ namespace api.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileDto dto)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            if (dto.DateOfBirth >= today) 
-                return BadRequest("Date of birth must be  past");
-
             var profile = await _context.UserProfiles.FirstOrDefaultAsync(profile => profile.UserId == CurrentUserId);
         
             if (profile == null)

@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace api.Dtos
 {
-    public class MealGroupDto
+    public class DiaryDayDto
     {
-        public string MealType {get;set;} = string.Empty;
+        public DateOnly Date { get; set; }
         public NutritionTotalsDto Totals { get; set; } = new();
-        public List<FoodEntryDto> Entries { get; set; } = null!;
+        public List<MealGroupDto> Meals { get; set; } = [];
     }
 }

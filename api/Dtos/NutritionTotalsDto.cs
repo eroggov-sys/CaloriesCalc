@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace api.Dtos
 {
-    public class DailyNutritionDto
+    public class NutritionTotalsDto
     {
-        public DateOnly Date { get; set; }
         public decimal Calories { get; set; }
         public decimal Protein { get; set; }
         public decimal Fat { get; set; }

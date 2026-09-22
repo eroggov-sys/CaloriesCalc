@@ -4,11 +4,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Models;
+using api.Services;
 using Microsoft.AspNetCore.Razor.Hosting;
 
 namespace api.Dtos
 {
-    public class UpdateUserProfileDto
+    public class UpdateUserProfileDto : IValidatableObject
     {
         [Required(ErrorMessage ="Weight is required")]
         [Range(typeof(decimal), "20", "500", ParseLimitsInInvariantCulture = true,
@@ -38,6 +39,22 @@ namespace api.Dtos
         [Range(typeof(decimal), "1", "75", ParseLimitsInInvariantCulture = true,
             ErrorMessage = "Body fat percentage must be between 1 and 75")]
         public decimal? BodyFatPercentage { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (DateOfBirth is null) yield break;
+
+            var age = AgeCalculator.CalculateAge(
+                DateOfBirth.Value,
+                DateOnly.FromDateTime(DateTime.UtcNow));
+
+            if (age < 13 || age > 120)
+            {
+                yield return new ValidationResult(
+                    "Age must be between 13 and 120 years",
+                    [nameof(DateOfBirth)]);
+            }
+        }
 
     }
 }

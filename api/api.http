@@ -1,6 +1,59 @@
-@api_HostAddress = http://localhost:5077
+@api = http://localhost:5077
+@email = test@example.com
+@password = Test123!
+@date = 2026-09-10
 
-GET {{api_HostAddress}}/weatherforecast/
-Accept: application/json
+### register
+POST {{api}}/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Enter
+# @name login
+POST {{api}}/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
 
 ###
+@token = {{login.response.body.$.accessToken}}
+
+### profile
+GET {{api}}/api/profile
+Authorization: Bearer {{token}}
+
+### targets
+GET {{api}}/api/profile/targets
+Authorization: Bearer {{token}}
+
+### search products
+GET {{api}}/api/Food/search?query=milk
+Authorization: Bearer {{token}}
+
+### diary for a day
+GET {{api}}/api/diary?date={{date}}
+Authorization: Bearer {{token}}
+
+
+
+### Add an entry (1 — product ID from the search)
+POST {{api}}/api/FoodEntries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "foodId": 2,
+  "quantityGrams": 150,
+  "date": "{{date}}",
+  "mealType": "Breakfast"
+}
+
+### OpenAPI-doc
+GET {{api}}/openapi/v1.json

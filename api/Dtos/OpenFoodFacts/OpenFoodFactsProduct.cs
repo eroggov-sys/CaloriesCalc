@@ -13,7 +13,7 @@ namespace api.Dtos.OpenFoodFacts
     public OpenFoodFactsNutriments? Nutriments { get; set; }
 
     [JsonPropertyName("product_name")]
-    public string? Name {get; set;} = string.Empty;
+    public string? Name {get; set;}
 
     [JsonPropertyName("code")]
     public string? Barcode {get; set;} 

@@ -1,7 +1,7 @@
 import Macronoutrients from "./Macronutrients"
 import Meals from "./Meals"
 import { useEffect, useState } from "react"
-import { getDailyNutrition } from "@/api/foodEntries"
+import { getDiaryDay } from "@/api/foodEntries"
 import { LogOut, UserRoundPen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getNutritionTargets } from "@/api/profile"
@@ -16,7 +16,8 @@ function getTodayDate() {
 
 export default function DashBoard({ onLogout, onEditProfile }) {
 
-  const [nutrition, setNutrition] = useState(null)
+  const [day, setDay] = useState(null)
+  const [isDayLoading, setIsDayLoading] = useState(true)
   const [error, setError] = useState("")
   const [selectedDate, setSelectedDate] = useState(getTodayDate)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -24,17 +25,22 @@ export default function DashBoard({ onLogout, onEditProfile }) {
   const [isTargetsLoading, setIsTargetsLoading] = useState(true)
 
   useEffect(() => {
-    async function loadNutrition () {
+    let canceled = false
 
-      try {
-        const data = await getDailyNutrition(selectedDate)
-        setNutrition(data)
-      } 
-      catch (requestError) { 
-        setError(requestError.message)
-      }
+    async function loadDay() {
+    try {
+      setIsDayLoading(true)
+      const data = await getDiaryDay(selectedDate)
+      if (!canceled) setDay(data)
+    } catch (requestError) {
+      if (!canceled) setError(requestError.message)
+    } finally {
+      if (!canceled) setIsDayLoading(false)
     }
-    loadNutrition()
+  }
+    loadDay()
+
+    return () => { canceled = true }
   },[selectedDate, refreshKey])
 
   useEffect(() => {
@@ -113,22 +119,23 @@ export default function DashBoard({ onLogout, onEditProfile }) {
           </div>
           
       </div>
-        <Macronoutrients title={`Calories`} consumed={nutrition?.calories ?? 0} goal={targets?.calories ?? 0} currency={"kcal"} />
+        <Macronoutrients title={`Calories`} consumed={day?.totals.calories ?? 0} goal={targets?.calories ?? 0} currency={"kcal"} />
 
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-4" >
 
-          <Macronoutrients title={`Protein`} consumed={nutrition?.protein ?? 0} goal={targets?.protein ?? 0} currency={"g"} />
-          <Macronoutrients title={`Fat`} consumed={nutrition?.fat ?? 0} goal={targets?.fat ?? 0} currency={"g"} />
-          <Macronoutrients title={`Carbs`} consumed={nutrition?.carbs ?? 0} goal={targets?.carbs ?? 0} currency={"g"} />
-          <Macronoutrients title={`Sugar`} consumed={nutrition?.sugar ?? 0} goal={targets?.sugarLimit ?? 0} currency={"g"} />
+          <Macronoutrients title={`Protein`} consumed={day?.totals.protein ?? 0} goal={targets?.protein ?? 0} currency={"g"} />
+          <Macronoutrients title={`Fat`} consumed={day?.totals.fat ?? 0} goal={targets?.fat ?? 0} currency={"g"} />
+          <Macronoutrients title={`Carbs`} consumed={day?.totals.carbs ?? 0} goal={targets?.carbs ?? 0} currency={"g"} />
+          <Macronoutrients title={`Sugar`} consumed={day?.totals.sugar ?? 0} goal={targets?.sugarLimit ?? 0} currency={"g"} />
 
 
         </div>
         <Meals 
         date={selectedDate}
-        refreshKey = {refreshKey}
-        onEntryCreated= {() => setRefreshKey((value) => value + 1)}
+        meals={day?.meals ?? []}
+        isLoading={isDayLoading}
+        onChanged={() => setRefreshKey((value) => value + 1)}
         />
       </div>
     </main>

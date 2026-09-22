@@ -1,78 +1,57 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using api.Data;
-using api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using api.Dtos;
-using api.Mappers;
+using Microsoft.AspNetCore.Authorization;
+using api.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace api.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class FoodController : ControllerBase
+   public class FoodController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IFoodService _foodService;
 
-        public FoodController(AppDbContext context)
+        public FoodController(IFoodService foodService) => _foodService = foodService;
+
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
-            _context = context;
+            var food = await _foodService.GetByIdAsync(id, cancellationToken);
+
+            return food is null ? NotFound() : Ok(food);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery][Required][MinLength(2)] string query, CancellationToken cancellationToken)
         {
-            var foods = await _context.Foods.ToListAsync();
-            return Ok(foods);
+            var result = await _foodService.SearchAsync(query, cancellationToken);
+
+            if (result.ExternalSearchFailed && result.Foods.Count == 0)
+            {
+                return Problem(
+                    detail: "Food database is temporarily unavailable, please try again later",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            return Ok(result.Foods);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create( [FromBody] CreateFoodDto dto)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateFoodDto dto, CancellationToken cancellationToken)
         {
+            var food = await _foodService.CreateAsync(dto, cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name is required");
-            var foodModel = dto.ToFoodFromCreate();
-
-            var normalizedName = dto.Name.Trim();
-
-            var foodExists = await _context.Foods
-                .AnyAsync(food =>
-                    EF.Functions.ILike(food.Name, normalizedName));
-
-            if (foodExists)
+            if (food is null)
             {
-                return Conflict("Food already exists");
+                return Problem(
+                    detail: "Food with this name already exists",
+                    statusCode: StatusCodes.Status409Conflict);
             }
 
-            _context.Foods.Add(foodModel);
-            await _context.SaveChangesAsync();
-
-            return Ok(foodModel);
-        }
-        
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] string? query)
-        {
-
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                return BadRequest("Search query is required");
-            }
-
-            var searchQuery = query.Trim();
-
-            var foods = await _context.Foods
-                .Where(food => EF.Functions.ILike(food.Name, $"%{searchQuery}%"))
-                .OrderBy(food => food.Name)
-                .Take(20)
-                .ToListAsync();
-            
-            return Ok(foods);
-
-
+            return CreatedAtAction(nameof(GetById), new { id = food.Id }, food);
         }
     }
 }

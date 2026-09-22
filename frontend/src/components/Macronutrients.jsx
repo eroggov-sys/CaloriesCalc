@@ -6,7 +6,8 @@ export default function Macronoutrients({title, consumed, goal, currency}) {
       goal > 0
       ? Math.min(Math.round((consumed / goal) * 100), 100)
       : 0
-    const remaining = Math.max(goal - consumed, 0)
+    
+    const remaining = Math.round(Math.max(goal - consumed, 0) * 10) / 10
 
     const radius = 30
     const circumference = 2 * Math.PI * radius

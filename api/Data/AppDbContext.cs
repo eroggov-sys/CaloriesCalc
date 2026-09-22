@@ -23,6 +23,34 @@ namespace api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            
+            builder.Entity<FoodEntry>(entity =>
+            {
+                entity.HasIndex(entry => new { entry.UserId, entry.Date });
+                entity.Property(entry => entry.MealType).HasConversion<string>();
+                entity.HasOne(entry => entry.User)
+                    .WithMany(user => user.FoodEntries)
+                    .HasForeignKey(entry => entry.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<Food>(entity =>
+            {
+                entity.Property(food => food.Name).HasMaxLength(200);
+                entity.Property(food => food.Brand).HasMaxLength(200);
+                entity.Property(food => food.Barcode).HasMaxLength(50);
+                entity.Property(food => food.ExternalId).HasMaxLength(100);
+
+                entity.Property(food => food.Source).HasConversion<string>();
+
+                entity.HasIndex(food => new { food.Source, food.ExternalId })
+                    .IsUnique()
+                    .HasFilter("\"ExternalId\" IS NOT NULL");
+
+                entity.HasIndex(food => food.Barcode)
+                    .HasFilter("\"Barcode\" IS NOT NULL");
+            });
+
             builder.Entity<UserProfile>(entity =>
             {
                 entity.HasKey(profile => profile.Id);

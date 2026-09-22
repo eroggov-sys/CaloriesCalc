@@ -12,9 +12,9 @@ namespace api.Services
     {
         public NutritionTargetDto Calculate(UserProfile profile, DateOnly calculationDate)
         {
-            var age = CalculateAge(profile.DateOfBirth, calculationDate);
+            var age = AgeCalculator.CalculateAge(profile.DateOfBirth, calculationDate);
 
-            if (age < 1) throw new ArgumentException("Date of birth in the past");
+            if (age < 1) throw new ArgumentException("Profile age must be at least 1 year");
             
             var leanBodyMass = CalculateLeanBodyMass(profile);
 
@@ -22,9 +22,9 @@ namespace api.Services
                 ? CalculateKatchMcArdleBmr(leanBodyMass!.Value)
                 : CalculateMifflinStJeorBmr(profile, age);
             
-            var activityCoefficent = GetActivityCoefficient(profile.ActivityLevel);
+            var activityCoefficient = GetActivityCoefficient(profile.ActivityLevel);
 
-            var tdee = bmr * activityCoefficent;
+            var tdee = bmr * activityCoefficient;
             
             var targetCalories = tdee * GetGoalCoefficient(profile.NutritionGoal);
             
@@ -59,18 +59,7 @@ namespace api.Services
 
         }
 
-        private static int CalculateAge(DateOnly dateOfBirth, DateOnly calculationDate)
-        {
-            var age = calculationDate.Year - dateOfBirth.Year;
-
-            if (dateOfBirth > calculationDate.AddYears(-age))
-            {
-                age--;
-            }
-            return age;
-        }
-
-        public static decimal? CalculateLeanBodyMass(UserProfile profile)
+        private static decimal? CalculateLeanBodyMass(UserProfile profile)
         {
             if (!profile.BodyFatPercentage.HasValue) return null;
 

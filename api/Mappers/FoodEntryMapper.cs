@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using api.Dtos;
 using api.Models;
+using api.Services;
 
 namespace api.Mappers
 {
@@ -16,37 +17,44 @@ namespace api.Mappers
                 Id = foodEntryModel.Id,
                 FoodId = foodEntryModel.FoodId,
                 QuantityGrams = foodEntryModel.QuantityGrams,
-                EatenAt = foodEntryModel.EatenAt,
+                Date = foodEntryModel.Date,
                 MealType = foodEntryModel.MealType,
                 FoodName = foodEntryModel.Food.Name,
-                Calories = foodEntryModel.Food.CaloriesPer100g * foodEntryModel.QuantityGrams / 100,
-                Protein = foodEntryModel.Food.ProteinPer100g * foodEntryModel.QuantityGrams / 100,
-                Fat = foodEntryModel.Food.FatPer100g * foodEntryModel.QuantityGrams / 100,
-                Carbs = foodEntryModel.Food.CarbsPer100g * foodEntryModel.QuantityGrams / 100,
-                Sugar = foodEntryModel.Food.SugarPer100g * foodEntryModel.QuantityGrams / 100,
+                Calories = NutritionMath.Round(NutritionMath.ForQuantity(foodEntryModel.Food.CaloriesPer100g, foodEntryModel.QuantityGrams)),
+                Protein = NutritionMath.Round(NutritionMath.ForQuantity(foodEntryModel.Food.ProteinPer100g, foodEntryModel.QuantityGrams)),
+                Fat = NutritionMath.Round(NutritionMath.ForQuantity(foodEntryModel.Food.FatPer100g, foodEntryModel.QuantityGrams)),
+                Carbs = NutritionMath.Round(NutritionMath.ForQuantity(foodEntryModel.Food.CarbsPer100g, foodEntryModel.QuantityGrams)),
+                Sugar = NutritionMath.Round(NutritionMath.ForQuantity(foodEntryModel.Food.SugarPer100g, foodEntryModel.QuantityGrams)),
 
             };
         }
 
-        public static FoodEntry ToFoodEntryFromCreate(this CreateEntryFoodDto entryFoodDto, int foodId, string userId)
+        public static NutritionTotalsDto ToTotalsDto(this IEnumerable<FoodEntry> entries)
+        {
+            var list = entries.ToList();
+
+            return new NutritionTotalsDto
+            {
+                Calories = NutritionMath.Round(list.Sum(e => NutritionMath.ForQuantity(e.Food.CaloriesPer100g, e.QuantityGrams))),
+                Protein  = NutritionMath.Round(list.Sum(e => NutritionMath.ForQuantity(e.Food.ProteinPer100g,  e.QuantityGrams))),
+                Fat      = NutritionMath.Round(list.Sum(e => NutritionMath.ForQuantity(e.Food.FatPer100g,      e.QuantityGrams))),
+                Carbs    = NutritionMath.Round(list.Sum(e => NutritionMath.ForQuantity(e.Food.CarbsPer100g,    e.QuantityGrams))),
+                Sugar    = NutritionMath.Round(list.Sum(e => NutritionMath.ForQuantity(e.Food.SugarPer100g,    e.QuantityGrams))),
+            };
+        }
+
+
+        public static FoodEntry ToFoodEntryFromCreate(this CreateFoodEntryDto entryFoodDto,string userId)
         {
             return new FoodEntry
             {
-                EatenAt = entryFoodDto.EatenAt!.Value,
-                MealType = entryFoodDto.MealType,
+                Date = entryFoodDto.Date!.Value,
+                MealType = entryFoodDto.MealType!.Value,
                 QuantityGrams = entryFoodDto.QuantityGrams,
-                FoodId  = foodId,
+                FoodId  = entryFoodDto.FoodId!.Value,
                 UserId = userId,
             };
         }
 
-        public static FoodEntry ToFoodEntrytFromUpdate(this UpdateFoodEntryRequestDto foodEntrytDto)
-        {
-            return new FoodEntry
-            {
-                QuantityGrams = foodEntrytDto.QuantityGrams,
-                
-            };
-        }
     }
 }

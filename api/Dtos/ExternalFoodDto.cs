@@ -7,7 +7,7 @@ namespace api.Dtos
 {
     public class ExternalFoodDto
     {
-    public required string Name {get; set;} = string.Empty;
+    public required string Name {get; set;}
     public required string Source { get; set; }
     public required string ExternalIdentifier { get; set; }
     public string? Barcode {get; set;} 

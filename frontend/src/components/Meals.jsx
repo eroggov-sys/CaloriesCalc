@@ -15,8 +15,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { useEffect, useState } from "react"
-import { getMealGroups, } from "@/api/foodEntries"
+import { useState } from "react"
 import AddFoodDialog from "./AddFoodDialog"
 import EditFoodEntryDialog from "./EditFoodEntryDialog"
 import DeleteFoodEntryDialog from "./DeleteFoodEntryDialog"
@@ -28,7 +27,7 @@ function MealCard({ meal, onChanged }) {
   const [editingEntry, setEditingEntry] = useState(null)
   const [deletingEntry, setDeletingEntry] = useState(null)
 
-  const totalCalories = meal.totalCalories
+  const totalCalories = meal.totals.calories
 
   const Icon = Sun
 
@@ -63,6 +62,13 @@ function MealCard({ meal, onChanged }) {
 
       {isOpen && (
         <div className="border-t border-zinc-200">
+          
+          {meal.entries.length === 0 && (
+            <p className="px-4 py-3 text-sm text-zinc-400 sm:px-5 sm:pl-12">
+              Nothing added yet
+            </p>
+          )}
+
           {meal.entries.map((food) => (
             <div
               key={food.id}
@@ -141,39 +147,14 @@ function MealCard({ meal, onChanged }) {
   )
 }
 
-export default function Meals({ date, refreshKey, onEntryCreated }) {
+export default function Meals({ date, meals, isLoading, onChanged }) {
   
-  const [mealGroups, setMealGroups] = useState([])
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadMeals() {
-      try {
-        setIsLoading(true)
-        setError("")
-
-        const data = await getMealGroups(date)
-        setMealGroups(data)
-
-      } catch (requestError) {
-        setError(requestError.message)
-      } finally{
-        setIsLoading(false)
-      } 
-      
-    }
-    loadMeals()
-
-  }, [date, refreshKey])
+ 
 
   if (isLoading) {
     return <p className="text-sm text-zinc-500">Loading meals...</p>
   }
 
-  if (error) {
-    return <p className="text-sm text-red-600">{error}</p>
-  }
   return (
     
     <section className=" w-full ">
@@ -187,7 +168,7 @@ export default function Meals({ date, refreshKey, onEntryCreated }) {
           
         <AddFoodDialog 
           date = {date}
-          onCreated={onEntryCreated}
+          onCreated={onChanged}
         /> 
         
 
@@ -202,19 +183,15 @@ export default function Meals({ date, refreshKey, onEntryCreated }) {
       </div>
 
       <div className="space-y-3">
-        {mealGroups.length === 0 ? (
-          <p className="py-8 text-center text-sm text-zinc-500">
-            No meals added for this day.
-          </p>
-        ) : (
-          mealGroups.map((meal) => (
+        { 
+          meals.map((meal) => (
             <MealCard
               key={meal.mealType}
               meal={meal}
-              onChanged={onEntryCreated}
+              onChanged={onChanged}
             />
           ))
-        )}
+        }
       </div>
     </section>
   )

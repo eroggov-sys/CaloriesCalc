@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using api.Data;
@@ -11,9 +12,11 @@ using api.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260910130923_MakeFoodEntryUserRequired")]
+    partial class MakeFoodEntryUserRequired
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -226,50 +229,26 @@ namespace api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Barcode")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Brand")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
                     b.Property<decimal>("CaloriesPer100g")
                         .HasColumnType("numeric");
 
                     b.Property<decimal>("CarbsPer100g")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("ExternalId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<decimal>("FatPer100g")
                         .HasColumnType("numeric");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("ProteinPer100g")
                         .HasColumnType("numeric");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<decimal>("SugarPer100g")
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Barcode")
-                        .HasFilter("\"Barcode\" IS NOT NULL");
-
-                    b.HasIndex("Source", "ExternalId")
-                        .IsUnique()
-                        .HasFilter("\"ExternalId\" IS NOT NULL");
 
                     b.ToTable("Foods");
                 });
@@ -282,8 +261,8 @@ namespace api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("EatenAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("FoodId")
                         .HasColumnType("integer");
@@ -303,7 +282,7 @@ namespace api.Migrations
 
                     b.HasIndex("FoodId");
 
-                    b.HasIndex("UserId", "Date");
+                    b.HasIndex("UserId");
 
                     b.ToTable("FoodEntries");
                 });
