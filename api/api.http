@@ -41,12 +41,15 @@ Authorization: Bearer {{token}}
 GET {{api}}/api/diary?date={{date}}
 Authorization: Bearer {{token}}
 
+
+
 ### Add an entry (1 — product ID from the search)
-POST {{api}}/api/FoodEntries/1
+POST {{api}}/api/FoodEntries
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
+  "foodId": 2,
   "quantityGrams": 150,
   "date": "{{date}}",
   "mealType": "Breakfast"

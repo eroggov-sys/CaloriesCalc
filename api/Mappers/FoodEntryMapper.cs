@@ -44,25 +44,17 @@ namespace api.Mappers
         }
 
 
-        public static FoodEntry ToFoodEntryFromCreate(this CreateFoodEntryDto entryFoodDto, int foodId, string userId)
+        public static FoodEntry ToFoodEntryFromCreate(this CreateFoodEntryDto entryFoodDto,string userId)
         {
             return new FoodEntry
             {
                 Date = entryFoodDto.Date!.Value,
                 MealType = entryFoodDto.MealType!.Value,
                 QuantityGrams = entryFoodDto.QuantityGrams,
-                FoodId  = foodId,
+                FoodId  = entryFoodDto.FoodId!.Value,
                 UserId = userId,
             };
         }
 
-        public static FoodEntry ToFoodEntryFromUpdate(this UpdateFoodEntryDto updateDto)
-        {
-            return new FoodEntry
-            {
-                QuantityGrams = updateDto.QuantityGrams,
-                
-            };
-        }
     }
 }

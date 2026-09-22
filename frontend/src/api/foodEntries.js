@@ -18,8 +18,8 @@ export async function getDiaryDay(date) {
 }
 
 export async function createFoodEntry(foodId, entry) {
-  const response = await authorizedFetch(
-    `${API_URL}/FoodEntries/${foodId}`,
+
+  const response = await authorizedFetch( `${API_URL}/FoodEntries`,
     {
       method: "POST",
       headers: { 
@@ -28,8 +28,9 @@ export async function createFoodEntry(foodId, entry) {
       body: JSON.stringify(entry),
     },
   )
+
   if (!response.ok) {
-    throw new Error("Failed to create food entry")
+    throw new Error(await readErrorMessage(response, "Failed to create food entry"))
   }
   return response.json()
 }
@@ -39,7 +40,10 @@ export async function deleteFoodEntry(id) {
     method: "DELETE",
   })
 
-  if (!response.ok) throw new Error("Unable to delete the record")
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, "Failed to delete food entry"))
+  } 
+
 }
 
 export async function updateFoodEntry(id, quantityGrams) {
@@ -52,7 +56,8 @@ export async function updateFoodEntry(id, quantityGrams) {
   })
 
   if (!response.ok) {
-    throw new Error("Failed to update the entry")
+    throw new Error(await readErrorMessage(response, "Failed to update food entry"))
+
   }
 
   return response.json()

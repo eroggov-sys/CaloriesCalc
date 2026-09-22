@@ -97,7 +97,8 @@ const AddFoodDialog = ({date, onCreated, }) => {
         setError("")
 
         try {
-            await createFoodEntry(selectedFood.id, {
+            await createFoodEntry({
+                foodId: selectedFood.id,
                 quantityGrams : quantity,
                 date,
                 mealType,

@@ -6,6 +6,7 @@ using api.Dtos;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using api.Models;
 
 namespace api.Controllers
 {
@@ -15,69 +16,59 @@ namespace api.Controllers
 
     public class FoodEntriesController : ControllerBase
     {
-        private readonly IFoodEntryRepository _foodEntryRepo;
+        private readonly IFoodEntryService _foodEntryService;
+
         private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        public FoodEntriesController(IFoodEntryRepository foodEntryRepo)
+        public FoodEntriesController(IFoodEntryService foodEntryService)
         {
-            _foodEntryRepo = foodEntryRepo;
+            _foodEntryService = foodEntryService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var entries = await _foodEntryRepo.GetAllAsync(CurrentUserId);
-            var foodEntryDto = entries.Select(s => s.ToFoodEntryDto());
-            
-            return Ok(foodEntryDto);
-        }
         [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
-            var foodEntry = await _foodEntryRepo.GetByIdAsync(id, CurrentUserId);
+            var foodEntry = await _foodEntryService.GetByIdAsync(id, CurrentUserId, cancellationToken);
 
             if(foodEntry == null) return NotFound();
 
-            return Ok(foodEntry.ToFoodEntryDto());
+            return Ok(foodEntry);
         }
 
 
 
-        [HttpPost("{foodId}")]
-        public async Task<IActionResult> Create([FromRoute] int foodId,[FromBody] CreateFoodEntryDto entryFoodDto)
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateFoodEntryDto entryFoodDto, CancellationToken cancellationToken)
         {   
-            var foodExists = await _foodEntryRepo.FoodExistsAsync(foodId);
 
-            if (!foodExists)
-                return BadRequest("Food does not exist");
+            var entry = await _foodEntryService.CreateAsync(CurrentUserId, entryFoodDto, cancellationToken);
 
-            var foodEntryModel = entryFoodDto.ToFoodEntryFromCreate(foodId, CurrentUserId);
-
-            await _foodEntryRepo.CreateAsync(foodEntryModel);
-
-            var createdEntry = await _foodEntryRepo.GetByIdAsync(foodEntryModel.Id, CurrentUserId);
-
-            return CreatedAtAction(nameof(GetById), new { id = foodEntryModel.Id }, createdEntry!.ToFoodEntryDto());
+            if (entry == null)
+            {
+                ModelState.AddModelError(nameof(entryFoodDto.FoodId), "Food does not exist");
+                return ValidationProblem(ModelState);
+            }
+            return CreatedAtAction(nameof(GetById), new { id = entry.Id }, entry);
         }
 
         [HttpPut]
-        [Route("{id}")]
-        public async Task<IActionResult> Update([FromRoute] int id, UpdateFoodEntryDto updateDto)
+        [Route("{id:int}")]
+        public async Task<IActionResult> Update([FromRoute] int id, UpdateFoodEntryDto updateDto, CancellationToken cancellationToken)
         {
-            var foodEntryModel = await _foodEntryRepo.UpdateAsync(id, updateDto.ToFoodEntryFromUpdate(), CurrentUserId);
-            if(foodEntryModel == null) return NotFound("Food entry not found");
+            var entry = await _foodEntryService.UpdateAsync(id, CurrentUserId, updateDto,  cancellationToken);
+            if(entry == null) return NotFound();
 
-            return Ok(foodEntryModel.ToFoodEntryDto());
+            return Ok(entry);
         }
 
         [HttpDelete]
-        [Route("{id}")]
+        [Route("{id:int}")]
         
-        public async Task<IActionResult> Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
         {
-            var deletedEntry = await _foodEntryRepo.DeleteAsync(id, CurrentUserId);
+            var deleted = await _foodEntryService.DeleteAsync(id, CurrentUserId, cancellationToken);
 
-            if (deletedEntry == null) return NotFound();
+            if (deleted == false) return NotFound();
 
             return NoContent();
         }

@@ -1,7 +1,6 @@
 using api.Data;
 using Microsoft.EntityFrameworkCore;
 using api.Interfaces;
-using api.Repository;
 using api.Models;
 using api.Services;
 using api.ExternalProviders;
@@ -9,7 +8,7 @@ using api.ExternalProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IFoodEntryRepository, FoodEntryRepository>();
+builder.Services.AddScoped<IFoodEntryService, FoodEntryService>();
 builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
 builder.Services.AddScoped<IFoodService, FoodService>();
 builder.Services.AddScoped<IDiaryService, DiaryService>();

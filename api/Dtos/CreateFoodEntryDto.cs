@@ -20,6 +20,9 @@ namespace api.Dtos
     [EnumDataType(typeof(MealType), ErrorMessage = "Invalid meal type")]
     public MealType? MealType { get; set; }
 
+    [Required(ErrorMessage = "FoodId is required")]
+    [Range(1, int.MaxValue, ErrorMessage = "FoodId must be positive")]
+    public int? FoodId { get; set; }
 
     }
 }
