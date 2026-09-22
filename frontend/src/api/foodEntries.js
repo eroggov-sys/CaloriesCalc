@@ -17,7 +17,7 @@ export async function getDiaryDay(date) {
   return response.json()
 }
 
-export async function createFoodEntry(foodId, entry) {
+export async function createFoodEntry( entry) {
 
   const response = await authorizedFetch( `${API_URL}/FoodEntries`,
     {
