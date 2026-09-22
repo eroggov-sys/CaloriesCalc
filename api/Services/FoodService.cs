@@ -10,8 +10,6 @@ namespace api.Services
     public class FoodService : IFoodService
     {
         private const int SearchResultLimit = 20;
-        private const int MinLocalResultsBeforeExternal = 5;
-
 
         private readonly AppDbContext _context;
         private readonly IExternalFoodProvider _externalFoodProvider;
@@ -32,13 +30,13 @@ namespace api.Services
                 .Replace("_", "\\_");
         }
 
-        public async Task<FoodSearchResult> SearchAsync(string query, CancellationToken cancellationToken = default)
+        public async Task<FoodSearchResult> SearchAsync(string query, bool includeExternal, CancellationToken cancellationToken = default)
         {
             var searchQuery = query.Trim();
 
             var localFoods = await SearchLocalAsync(searchQuery, cancellationToken);
 
-            if (localFoods.Count >= MinLocalResultsBeforeExternal)
+            if (!includeExternal)
             {
                 return new FoodSearchResult(localFoods, ExternalSearchFailed: false);
             }
@@ -157,5 +155,7 @@ namespace api.Services
 
             return foodModel.ToFoodDto();
         }
+
+       
     }
 }

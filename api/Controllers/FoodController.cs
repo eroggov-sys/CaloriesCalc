@@ -24,9 +24,12 @@ namespace api.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery][Required][MinLength(2)] string query, CancellationToken cancellationToken)
+        public async Task<IActionResult> Search(
+            [FromQuery][Required][MinLength(2)] string query, 
+            [FromQuery] bool external = false, 
+            CancellationToken cancellationToken = default)
         {
-            var result = await _foodService.SearchAsync(query, cancellationToken);
+            var result = await _foodService.SearchAsync(query, external, cancellationToken);
 
             if (result.ExternalSearchFailed && result.Foods.Count == 0)
             {

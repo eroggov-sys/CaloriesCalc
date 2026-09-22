@@ -30,6 +30,9 @@ const AddFoodDialog = ({date, onCreated, }) => {
         { label: "Dinner", value: "Dinner" },
         { label: "Snacks", value: "Snacks" }
     ]
+
+    const [isSearchingExternal, setIsSearchingExternal] = useState(false)
+    
     
     useEffect(() => {
         const searchQuery = query.trim();
@@ -117,6 +120,34 @@ const AddFoodDialog = ({date, onCreated, }) => {
         }
     }
 
+    async function handleSearchExternal() {
+        const searchQuery = query.trim()
+
+        setIsSearchingExternal(true)
+        setError("")
+
+        try {
+            const result = await searchFoods(searchQuery, { external: true })
+            setFoods(result)
+            setHasSearched(true)
+        } catch (requestError) {
+            setError(requestError.message)
+        } finally {
+            setIsSearchingExternal(false)
+        }
+    }
+
+    const searchExternalButton = (
+        <button
+            type="button"
+            onClick={handleSearchExternal}
+            disabled={isSearchingExternal}
+            className="w-full px-3 py-2 text-left text-sm text-green-700 hover:bg-zinc-50 disabled:opacity-50"
+        >
+            {isSearchingExternal ? "Searching Open Food Facts..." : "Search Open Food Facts"}
+        </button>
+    )
+
     return(
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger
@@ -183,9 +214,10 @@ const AddFoodDialog = ({date, onCreated, }) => {
 
                 {isSearching && (<p className="mt-2 text-sm text-zinc-500">Searching...</p>)}
                 {!isSearching && hasSearched && foods.length === 0 && (
-                    <p className="mt-2 text-sm text-zinc-500">
-                        Nothing found. Try another name.
-                    </p>
+                    <div className="mt-2">
+                        <p className="text-sm text-zinc-500">Nothing found locally.</p>
+                        {searchExternalButton}
+                    </div>
                 )}
 
                 {error && (
@@ -217,6 +249,7 @@ const AddFoodDialog = ({date, onCreated, }) => {
                         </span>
                         </button>
                     ))}
+                    {searchExternalButton}
                     </div>
                 )}
 

@@ -3,9 +3,12 @@ import { readErrorMessage } from "@/api/problem"
 
 const API_URL = "http://localhost:5077/api"
 
-export async function searchFoods(query) {
+export async function searchFoods(query, { external = false } = {}) {
+    const params = new URLSearchParams({ query, external: String(external) })
+
+
     const response = await authorizedFetch(
-        `${API_URL}/Food/search?query=${encodeURIComponent(query)}`,
+        `${API_URL}/Food/search?${params}`,
     )
 
     if (!response.ok) {
