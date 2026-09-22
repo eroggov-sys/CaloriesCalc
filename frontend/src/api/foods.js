@@ -1,7 +1,7 @@
 import { authorizedFetch } from "@/api/auth"
 import { readErrorMessage } from "@/api/problem"
+import { API_URL } from "@/api/config"
 
-const API_URL = "http://localhost:5077/api"
 
 export async function searchFoods(query, { page = 1, external = false } = {}) {
     const params = new URLSearchParams({

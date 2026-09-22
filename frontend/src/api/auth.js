@@ -1,6 +1,6 @@
 import { readErrorMessage } from "@/api/problem"
+import { IDENTITY_URL as API_URL } from "@/api/config"
 
-const API_URL = "http://localhost:5077"
 
 export async function register(email, password) {   
     const response = await fetch(`${API_URL}/register`,{

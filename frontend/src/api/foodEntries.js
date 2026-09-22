@@ -1,8 +1,8 @@
 import { authorizedFetch } from "@/api/auth"
 import { readErrorMessage } from "@/api/problem"
+import { API_URL } from "@/api/config"
 
 
-const API_URL = "http://localhost:5077/api"
 
 export async function getDiaryDay(date) {
 

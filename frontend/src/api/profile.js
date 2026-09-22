@@ -1,7 +1,6 @@
 import { authorizedFetch } from "@/api/auth"
 import { readErrorMessage } from "@/api/problem"
-
-const API_URL = "http://localhost:5077/api"
+import { API_URL } from "@/api/config"
 
 export async function getProfile() {
     const response = await authorizedFetch(`${API_URL}/profile`)    
